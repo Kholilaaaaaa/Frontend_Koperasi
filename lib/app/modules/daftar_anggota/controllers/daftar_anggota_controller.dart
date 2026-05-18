@@ -1,24 +1,384 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../../routes/app_routes.dart';
+import 'package:pattern_getx_cli/app/network/api_client.dart';
 
 class DaftarAnggotaController extends GetxController {
+  final box = GetStorage();
+  final picker = ImagePicker();
+
+  // Step 1: Email & Phone
   final emailController = TextEditingController();
   final phoneController = TextEditingController();
+  var loginType = ''.obs;
+
+  // Step state
+  var currentStep = 1.obs;
+
+  // Step 2: Document Paths
+  var ktpImage = Rx<File?>(null);
+  var kartuAnggotaImage = Rx<File?>(null);
+  var pasFotoImage = Rx<File?>(null);
+  var signatureImage = Rx<File?>(null);
+
+  // Step 3: OCR Data
+  final nameController = TextEditingController();
+  final nikController = TextEditingController();
+  final dobController = TextEditingController();
+  final genderController = TextEditingController();
+  final religionController = TextEditingController();
+  final addressController = TextEditingController();
+
+  // Step 4: Savings
+  var selectedSavingsType = 'Simpanan Sukarela'.obs;
+  final nominalController = TextEditingController();
+
+  // Step 5: Agreement
+  var isAgreed = false.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    loginType.value = box.read('loginType') ?? '';
+    
+    if (loginType.value == 'email') {
+      emailController.text = box.read('userEmail') ?? '';
+    } else if (loginType.value == 'phone') {
+      phoneController.text = box.read('userPhone') ?? '';
+    }
+  }
 
   @override
   void onClose() {
     emailController.dispose();
     phoneController.dispose();
+    nameController.dispose();
+    nikController.dispose();
+    dobController.dispose();
+    religionController.dispose();
+    addressController.dispose();
+    nominalController.dispose();
     super.onClose();
   }
 
+  Future<void> pickImage(String type, ImageSource source) async {
+    try {
+      final pickedFile = await picker.pickImage(source: source);
+      if (pickedFile != null) {
+        switch (type) {
+          case 'ktp':
+            ktpImage.value = File(pickedFile.path);
+            break;
+          case 'kartu_anggota':
+            kartuAnggotaImage.value = File(pickedFile.path);
+            break;
+          case 'pas_foto':
+            pasFotoImage.value = File(pickedFile.path);
+            break;
+          case 'signature':
+            signatureImage.value = File(pickedFile.path);
+            break;
+        }
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Gagal mengambil gambar: $e', 
+          backgroundColor: Colors.red, colorText: Colors.white);
+    }
+  }
+
   void nextStep() {
-    // Logic for next step (step 2)
-    Get.snackbar(
-      'Informasi',
-      'Lanjut ke tahap Verifikasi Dokumen',
-      backgroundColor: Colors.blue,
-      colorText: Colors.white,
+    if (currentStep.value == 1) {
+      if (loginType.value == 'email' && phoneController.text.isEmpty) {
+        Get.snackbar('Error', 'Nomor telepon harus diisi', backgroundColor: Colors.red, colorText: Colors.white);
+        return;
+      }
+      if (loginType.value == 'phone' && emailController.text.isEmpty) {
+        Get.snackbar('Error', 'Email harus diisi', backgroundColor: Colors.red, colorText: Colors.white);
+        return;
+      }
+      currentStep.value = 2;
+    } else if (currentStep.value == 2) {
+      if (ktpImage.value == null) {
+        Get.snackbar('Dokumen Belum Lengkap', 'Harap upload foto KTP terlebih dahulu', 
+            backgroundColor: Colors.red, colorText: Colors.white);
+        return;
+      }
+      if (kartuAnggotaImage.value == null) {
+        Get.snackbar('Dokumen Belum Lengkap', 'Harap upload Kartu Anggota terlebih dahulu', 
+            backgroundColor: Colors.red, colorText: Colors.white);
+        return;
+      }
+      if (pasFotoImage.value == null) {
+        Get.snackbar('Dokumen Belum Lengkap', 'Harap upload Pas Foto terlebih dahulu', 
+            backgroundColor: Colors.red, colorText: Colors.white);
+        return;
+      }
+      if (signatureImage.value == null) {
+        Get.snackbar('Dokumen Belum Lengkap', 'Harap upload Tanda Tangan terlebih dahulu', 
+            backgroundColor: Colors.red, colorText: Colors.white);
+        return;
+      }
+      processOCR();
+    } else if (currentStep.value == 3) {
+      if (nameController.text.isEmpty || nikController.text.isEmpty) {
+        Get.snackbar('Error', 'Data OCR tidak boleh kosong', 
+            backgroundColor: Colors.red, colorText: Colors.white);
+        return;
+      }
+      currentStep.value = 4;
+    } else if (currentStep.value == 4) {
+      if (nominalController.text.isEmpty) {
+        Get.snackbar('Error', 'Nominal simpanan harus diisi', 
+            backgroundColor: Colors.red, colorText: Colors.white);
+        return;
+      }
+      currentStep.value = 5;
+    }
+  }
+
+  void previousStep() {
+    if (currentStep.value > 1) {
+      currentStep.value--;
+    } else {
+      Get.back();
+    }
+  }
+
+  Future<void> processOCR() async {
+    if (ktpImage.value == null) return;
+
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(
+                height: 60,
+                width: 60,
+                child: CircularProgressIndicator(
+                  color: Color(0xFF6B0D0D),
+                  strokeWidth: 5,
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Memproses Dokumen',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Color(0xFF6B0D0D),
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Mohon tunggu sebentar, sistem sedang mengekstraksi data KTP Anda...',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: Colors.black54),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/ocr'));
+      
+      final token = await const FlutterSecureStorage().read(key: 'jwt_token');
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      
+      // Tambahkan file KTP
+      request.files.add(await http.MultipartFile.fromPath(
+        'file', // Nama field di Flask: request.files['file']
+        ktpImage.value!.path,
+      ));
+
+      var streamedResponse = await request.send().timeout(const Duration(seconds: 30));
+      var response = await http.Response.fromStream(streamedResponse);
+
+      Get.back(); // Close loading dialog
+
+      if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
+        
+        // Isi form dengan data dari Flask
+        nameController.text = data['nama'] ?? "";
+        nikController.text = data['nik'] ?? "";
+        dobController.text = data['ttl'] ?? "";
+        genderController.text = data['jenis_kelamin'] ?? "Laki-laki";
+        religionController.text = data['agama'] ?? "";
+        addressController.text = data['alamat'] ?? "";
+
+        currentStep.value = 3;
+      } else if (response.statusCode == 401) {
+        await const FlutterSecureStorage().delete(key: 'jwt_token');
+        box.write('isLoggedIn', false);
+        Get.offAllNamed(Routes.LOGIN);
+        Get.snackbar('Sesi Berakhir', 'Silakan login kembali.', backgroundColor: Colors.orange, colorText: Colors.white);
+      } else {
+        Get.snackbar('Error', 'Gagal memproses OCR: ${response.body}', 
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.back(); // Close loading dialog
+      Get.snackbar('Error', 'Terjadi kesalahan koneksi: $e', 
+          backgroundColor: Colors.red, colorText: Colors.white);
+    }
+  }
+
+  Future<void> submitRegistration() async {
+    if (!isAgreed.value) {
+      Get.snackbar(
+        'Persetujuan Diperlukan',
+        'Anda harus menyetujui syarat dan ketentuan sebelum mengajukan pendaftaran.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+        margin: const EdgeInsets.all(20),
+      );
+      return;
+    }
+
+    Get.dialog(
+      const Center(child: CircularProgressIndicator(color: Color(0xFF6B0D0D))),
+      barrierDismissible: false,
+    );
+
+    try {
+      var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/member/register'));
+      
+      final token = await const FlutterSecureStorage().read(key: 'jwt_token');
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      
+      // Data Identitas & OCR
+      request.fields['email'] = emailController.text;
+      request.fields['phone'] = phoneController.text;
+      request.fields['user_id'] = (box.read('userId') ?? "").toString();
+      request.fields['nama'] = nameController.text;
+      request.fields['nik'] = nikController.text;
+      request.fields['ttl'] = dobController.text;
+      request.fields['jenis_kelamin'] = genderController.text;
+      request.fields['agama'] = religionController.text;
+      request.fields['alamat'] = addressController.text;
+      
+      // Data Simpanan
+      request.fields['tipe_simpanan'] = selectedSavingsType.value;
+      request.fields['nominal_simpanan'] = nominalController.text;
+
+      // File Dokumen
+      if (ktpImage.value != null) {
+        request.files.add(await http.MultipartFile.fromPath('ktp', ktpImage.value!.path));
+      }
+      if (kartuAnggotaImage.value != null) {
+        request.files.add(await http.MultipartFile.fromPath('kartu_anggota', kartuAnggotaImage.value!.path));
+      }
+      if (pasFotoImage.value != null) {
+        request.files.add(await http.MultipartFile.fromPath('pas_foto', pasFotoImage.value!.path));
+      }
+      if (signatureImage.value != null) {
+        request.files.add(await http.MultipartFile.fromPath('tanda_tangan', signatureImage.value!.path));
+      }
+
+      var streamedResponse = await request.send().timeout(const Duration(seconds: 60));
+      var response = await http.Response.fromStream(streamedResponse);
+
+      Get.back(); // Close loading dialog
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Simpan status pendaftaran secara lokal
+        box.write('registration_status', 'pending');
+        
+        _showSuccessDialog();
+      } else if (response.statusCode == 401) {
+        await const FlutterSecureStorage().delete(key: 'jwt_token');
+        box.write('isLoggedIn', false);
+        Get.offAllNamed(Routes.LOGIN);
+        Get.snackbar('Sesi Berakhir', 'Silakan login kembali.', backgroundColor: Colors.orange, colorText: Colors.white);
+      } else {
+        Get.snackbar('Gagal Daftar', 'Terjadi kesalahan: ${response.body}', 
+            backgroundColor: Colors.red, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.back(); // Close loading dialog
+      Get.snackbar('Error Koneksi', 'Gagal menghubungi server: $e', 
+          backgroundColor: Colors.red, colorText: Colors.white);
+    }
+  }
+
+  void _showSuccessDialog() {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(32),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFE8F5E9),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.check_circle, color: Colors.green, size: 64),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Pendaftaran Berhasil!',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Color(0xFF6B0D0D)),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Data Anda telah berhasil diajukan dan sedang dalam proses verifikasi oleh tim kami.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.black54, height: 1.5),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Get.back(); // Close dialog
+                    Get.offAllNamed(Routes.DASHBOARD_STATUS); 
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6B0D0D),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                  child: const Text('Ke Dashboard Status', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: false,
     );
   }
 }

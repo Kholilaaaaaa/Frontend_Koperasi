@@ -4,6 +4,8 @@ import '../../../routes/app_routes.dart';
 import '../controllers/splash_controller.dart';
 
 class SplashView extends GetView<SplashController> {
+  const SplashView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -39,7 +41,7 @@ class SplashView extends GetView<SplashController> {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    'Koperasi Simpanan\nSukarela',
+                    'KOPERASI SIMPANAN\nHARKAT',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 20,

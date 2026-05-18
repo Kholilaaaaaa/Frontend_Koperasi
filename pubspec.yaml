@@ -38,7 +38,11 @@ dependencies:
   get: ^4.7.3
   google_sign_in: ^7.2.0
   http: ^1.6.0
+  flutter_secure_storage: ^9.0.0
   get_storage: ^2.1.1
+  image_picker: ^1.2.2
+  fl_chart: ^0.70.2
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:

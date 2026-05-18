@@ -4,40 +4,20 @@ import '../../../routes/app_routes.dart';
 import '../controllers/login_controller.dart';
 
 class LoginView extends GetView<LoginController> {
+  const LoginView({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFDF6F5),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF6B0000)),
-          onPressed: () => Get.back(),
-        ),
-        title: const Text(
-          'THE HERITAGE LEDGER',
-          style: TextStyle(
-            color: Color(0xFF6B0000),
-            fontSize: 14,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.2,
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline, color: Color(0xFF6B0000)),
-            onPressed: () {},
-          ),
-        ],
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              _buildTopBar(),
+              const SizedBox(height: 24),
               const Text(
                 'Masuk ke Akun',
                 style: TextStyle(
@@ -74,7 +54,7 @@ class LoginView extends GetView<LoginController> {
                   hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
                   prefixIcon: const Icon(Icons.person_outline, color: Colors.black54),
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.5),
+                  fillColor: Colors.white.withValues(alpha: 0.5),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -98,7 +78,7 @@ class LoginView extends GetView<LoginController> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () => Get.toNamed(Routes.FORGOT_PASSWORD),
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
                       minimumSize: Size.zero,
@@ -134,7 +114,7 @@ class LoginView extends GetView<LoginController> {
                         onPressed: controller.togglePasswordVisibility,
                       ),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.5),
+                      fillColor: Colors.white.withValues(alpha: 0.5),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -204,7 +184,7 @@ class LoginView extends GetView<LoginController> {
                     style: TextStyle(color: Colors.black87),
                   ),
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white.withOpacity(0.5),
+                    backgroundColor: Colors.white.withValues(alpha: 0.5),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: BorderSide.none,
                     shape: RoundedRectangleBorder(
@@ -242,7 +222,7 @@ class LoginView extends GetView<LoginController> {
               
               const Center(
                 child: Text(
-                  '© 2024 KOPERASI HERITAGE LEDGER •\nKEPERCAYAAN MELALUI GENERASI',
+                  '© 2024 KOPERASI SIMPANAN HARKAT •\nKEPERCAYAAN MELALUI GENERASI',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 8,
@@ -255,6 +235,61 @@ class LoginView extends GetView<LoginController> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTopBar() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF6B0000), size: 20),
+                onPressed: () => Get.back(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 16),
+              Container(
+                width: 35,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  border: Border.all(color: const Color(0xFF6B0000).withValues(alpha: 0.1)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Icon(Icons.account_balance, color: Color(0xFF6B0000), size: 20),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'KOPERASI HARKAT',
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: TextStyle(
+                    color: Color(0xFF6B0000),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+    
+      ],
     );
   }
 }

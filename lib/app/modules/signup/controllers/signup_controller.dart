@@ -5,6 +5,7 @@ import 'package:get_storage/get_storage.dart';
 import '../../../routes/app_routes.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:pattern_getx_cli/app/network/api_client.dart';
 
 class SignupController extends GetxController {
   final isPasswordVisible = false.obs;
@@ -18,6 +19,14 @@ class SignupController extends GetxController {
 
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   final box = GetStorage();
+
+  @override
+  void onInit() {
+    super.onInit();
+    _googleSignIn.initialize(
+      serverClientId: '441708388123-harti7pngma92cde3b7lun8m96erblln.apps.googleusercontent.com',
+    );
+  }
 
   @override
   void onClose() {
@@ -61,12 +70,15 @@ class SignupController extends GetxController {
     }
 
     try {
+
+      final identity = emailOrPhoneController.text;
+      
       final response = await http.post(
-        Uri.parse('http://192.168.110.95:5000/api/auth/mobile-register'),
+        Uri.parse('$baseUrl/api/auth/mobile-register'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'full_name': nameController.text,
-          'identity': emailOrPhoneController.text,
+          'identity': identity,
           'password': passwordController.text,
         }),
       );
@@ -74,21 +86,28 @@ class SignupController extends GetxController {
       final data = jsonDecode(response.body);
 
       if ((response.statusCode == 200 || response.statusCode == 201) && data['success']) {
-        Get.snackbar(
-          'Sukses',
-          'Akun berhasil dibuat! Silakan masuk.',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
+        if (data['user'] != null && data['user']['id'] != null) {
+          box.write('userId', data['user']['id']);
+        }
+
+        final registeredEmail = emailOrPhoneController.text;
         
-        // Clear fields
+        // Clear fields AFTER capturing identity
         nameController.clear();
         emailOrPhoneController.clear();
         passwordController.clear();
         confirmPasswordController.clear();
 
-        // Navigate to login
-        Get.offAllNamed(Routes.LOGIN);
+        Get.snackbar(
+          'Periksa Email',
+          'Kode OTP telah dikirim ke email Anda untuk verifikasi.',
+          backgroundColor: Colors.blue,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
+
+        // Pindah ke VerificationPage
+        Get.toNamed(Routes.VERIFICATION, arguments: {'email': registeredEmail});
       } else {
         Get.snackbar(
           'Registrasi Gagal',
@@ -98,57 +117,104 @@ class SignupController extends GetxController {
         );
       }
     } catch (e) {
+      print('DEBUG: Error saat signup: $e');
       Get.snackbar(
         'Error Koneksi',
         'Gagal terhubung ke server: $e',
         backgroundColor: Colors.orange,
         colorText: Colors.white,
+        duration: const Duration(seconds: 5),
       );
     }
   }
 
   Future<void> signupWithGoogle() async {
     try {
-      await _googleSignIn.initialize(
-        serverClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
-      );
-      final GoogleSignInAccount? googleUser = await _googleSignIn.authenticate();
+      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
       
-      if (googleUser != null) {
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-        
-        // Kirim idToken ke Flask
-        final response = await http.post(
-          Uri.parse('http://192.168.110.95:5000/api/auth/google-mobile'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'idToken': googleAuth.idToken}),
-        );
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          Get.snackbar(
-            'Sukses',
-            'Berhasil daftar dengan akun Google: ${googleUser.displayName}',
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-          );
-          box.write('isLoggedIn', true);
-          Get.offAllNamed(Routes.VISITOR_DASHBOARD);
-        } else {
-          Get.snackbar(
-            'Error Backend',
-            'Gagal autentikasi di server: ${response.statusCode}',
-            backgroundColor: Colors.orange,
-            colorText: Colors.white,
-          );
+      // Kirim idToken ke Flask
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/google-mobile'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'idToken': googleAuth.idToken}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        Get.snackbar(
+          'Sukses',
+          'Berhasil mendaftar dengan akun Google: ${googleUser.displayName}',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+        
+        box.write('isLoggedIn', true);
+        box.write('loginType', 'email');
+        box.write('userEmail', googleUser.email);
+        
+        if (data['user'] != null && data['user']['id'] != null) {
+          box.write('userId', data['user']['id']);
         }
+        
+        // Cek status member dan navigasi
+        await _checkMemberStatusAndRoute();
+      } else {
+        Get.snackbar(
+          'Error Backend',
+          'Gagal autentikasi di server: ${response.statusCode}',
+          backgroundColor: Colors.orange,
+          colorText: Colors.white,
+        );
       }
-    } catch (error) {
+    } catch (e) {
       Get.snackbar(
         'Error',
-        'Gagal daftar dengan Google: $error',
+        'Gagal daftar dengan Google: $e',
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+    }
+  }
+
+  Future<void> _checkMemberStatusAndRoute() async {
+    try {
+      final userId = box.read('userId');
+      if (userId == null) {
+        Get.offAllNamed(Routes.VISITOR_DASHBOARD);
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse('$baseUrl/api/member/status/$userId'),
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final status = (data['status'] ?? 'not_started').toString().toLowerCase();
+        print("DEBUG SIGNUP: Final Status check: $status");
+
+        if (status == 'approved' || status == 'disetujui' || status == 'aktif' || status == 'acc' || status == 'diterima') {
+          print("DEBUG SIGNUP: Status Approved -> Routes.MEMBER_DASHBOARD");
+          Get.offAllNamed(Routes.MEMBER_DASHBOARD);
+        } else if (status == 'pending' || status == 'menunggu') {
+          print("DEBUG SIGNUP: Status Pending -> Routes.DASHBOARD_STATUS");
+          Get.offAllNamed(Routes.DASHBOARD_STATUS);
+        } else if (status == 'rejected' || status == 'ditolak') {
+          print("DEBUG SIGNUP: Status Rejected -> Routes.DASHBOARD_STATUS");
+          Get.offAllNamed(Routes.DASHBOARD_STATUS);
+        } else {
+          // Default for 'not_started' or unknown
+          print("DEBUG SIGNUP: Status '$status' -> Routes.VISITOR_DASHBOARD");
+          Get.offAllNamed(Routes.VISITOR_DASHBOARD);
+        }
+      } else {
+        print("DEBUG SIGNUP: Server error ${response.statusCode}. Fallback to VISITOR.");
+        Get.offAllNamed(Routes.VISITOR_DASHBOARD);
+      }
+    } catch (e) {
+      Get.offAllNamed(Routes.VISITOR_DASHBOARD);
     }
   }
 }

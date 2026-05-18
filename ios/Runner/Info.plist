@@ -43,6 +43,12 @@
 	</array>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Aplikasi memerlukan akses galeri untuk mengunggah dokumen pendaftaran.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikasi memerlukan akses kamera untuk mengambil foto dokumen pendaftaran.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Aplikasi memerlukan akses mikrofon (jika diperlukan untuk video, opsional).</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 </dict>

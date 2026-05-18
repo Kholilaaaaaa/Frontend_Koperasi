@@ -4,7 +4,7 @@ import '../../../routes/app_routes.dart';
 import '../controllers/visitor_dashboard_controller.dart';
 
 class VisitorDashboardView extends GetView<VisitorDashboardController> {
-  const VisitorDashboardView({Key? key}) : super(key: key);
+  const VisitorDashboardView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,37 +22,68 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
               _buildHeroSection(themeColor),
               _buildFeaturesSection(themeColor),
               _buildGrowthSimulation(themeColor),
-              SizedBox(height: 100), // Space for bottom nav
             ],
           ),
         ),
       ),
-      bottomNavigationBar: _buildBottomNav(themeColor),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Get.toNamed(Routes.DAFTAR_ANGGOTA),
+        backgroundColor: themeColor,
+        label: Row(
+          children: [
+            Text(
+              'Daftar Menjadi Anggota',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(width: 8),
+            Icon(Icons.arrow_forward, color: Colors.white, size: 18),
+          ],
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(20.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              Icon(Icons.account_balance, color: Color(0xFF6B0D0D), size: 24),
-              SizedBox(width: 8),
-              Text(
-                'HERITAGE LEDGER',
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  border: Border.all(color: const Color(0xFF6B0D0D).withOpacity(0.1)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Icon(Icons.account_balance, color: Color(0xFF6B0D0D), size: 20),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'KOPERASI SIMPANAN HARKAT',
                 style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  letterSpacing: 1.2,
                   color: Color(0xFF6B0D0D),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  letterSpacing: 1.0,
                 ),
               ),
             ],
           ),
-          Icon(Icons.language, color: Colors.grey),
+          const Icon(Icons.language, color: Colors.grey, size: 24),
         ],
       ),
     );
@@ -83,27 +114,6 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
             ),
           ),
           SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => Get.toNamed(Routes.DAFTAR_ANGGOTA),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: themeColor,
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Daftar Menjadi Anggota',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward, color: Colors.white, size: 18),
-              ],
-            ),
-          ),
           SizedBox(height: 32),
           ClipRRect(
             borderRadius: BorderRadius.circular(24),
@@ -158,7 +168,7 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
           ),
           SizedBox(height: 8),
           Text(
-            'Lebih Dari Sekadar\nSimpan Pinjam',
+            'Solusi Simpanan\nMasa Depan Anda',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -168,23 +178,23 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
           SizedBox(height: 24),
           _buildFeatureCard(
             Icons.account_balance_wallet_outlined,
-            'Simpanan Sukarela',
-            'Fleksibilitas penuh dalam menabung. Setor dan tarik dana kapan saja tanpa potongan biaya administrasi bulanan.',
+            'Beragam Jenis Simpanan',
+            'Tersedia Simpanan Pokok, Wajib, dan Sukarela yang dirancang untuk mendukung pertumbuhan aset finansial Anda dengan aman.',
             Colors.orange[50]!,
           ),
           SizedBox(height: 16),
           _buildFeatureCard(
-            Icons.visibility_outlined,
-            'Transparansi Penuh',
-            'Pantau pertumbuhan saldo dan riwayat transaksi Anda secara real-time melalui dasbor digital yang aman.',
+            Icons.account_balance_outlined,
+            'Penarikan Fleksibel',
+            'Ajukan penarikan dana simpanan sukarela Anda kapan saja langsung melalui aplikasi, tanpa proses yang rumit.',
             Colors.white,
           ),
           SizedBox(height: 16),
           _buildFeatureCard(
             Icons.trending_up,
             'Bagi Hasil (SHU)',
-            'Nikmati Sisa Hasil Usaha tahunan yang kompetitif, wujud nyata dari asas kekeluargaan dan kesejahteraan anggota.',
-            themeColor.withOpacity(0.9),
+            'Nikmati Sisa Hasil Usaha tahunan yang kompetitif sebagai apresiasi atas partisipasi aktif Anda dalam koperasi.',
+            themeColor.withAlpha((0.9 * 255).toInt()),
             isDark: true,
           ),
         ],
@@ -200,7 +210,7 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha((0.05 * 255).toInt()),
             blurRadius: 10,
             offset: Offset(0, 4),
           ),
@@ -324,36 +334,13 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
       ),
     );
   }
-
-  Widget _buildBottomNav(Color themeColor) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 10, offset: Offset(0, -2)),
-        ],
-      ),
-      child: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: themeColor,
-        unselectedItemColor: Colors.grey,
-        currentIndex: 0,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Beranda'),
-          BottomNavigationBarItem(icon: Icon(Icons.history), label: 'Riwayat'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), label: 'Obrol'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profil'),
-        ],
-      ),
-    );
-  }
 }
 
 // Fixed Positioned typo in code
 class Position8 extends StatelessWidget {
   final Widget child;
   final double? top, bottom, left, right;
-  Position8({required this.child, this.top, this.bottom, this.left, this.right});
+  const Position8({super.key, required this.child, this.top, this.bottom, this.left, this.right});
   @override
   Widget build(BuildContext context) => Positioned(top: top, bottom: bottom, left: left, right: right, child: child);
 }

@@ -19,12 +19,8 @@ class SignupView extends GetView<SignupController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              IconButton(
-                icon: Icon(Icons.arrow_back, color: themeColor),
-                onPressed: () => Get.back(),
-              ),
-              const SizedBox(height: 20),
+              _buildTopBar(themeColor),
+              const SizedBox(height: 24),
               
               Text(
                 'Buat Akun Baru',
@@ -36,7 +32,7 @@ class SignupView extends GetView<SignupController> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Mulai perjalanan finansial Anda bersama Heritage Ledger.',
+                'Mulai perjalanan finansial Anda bersama Koperasi Simpanan Harkat.',
                 style: TextStyle(color: Colors.black54, fontSize: 14),
               ),
               const SizedBox(height: 32),
@@ -101,6 +97,49 @@ class SignupView extends GetView<SignupController> {
                   child: const Text(
                     'Daftar Sekarang',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // OR Divider
+              Row(
+                children: const [
+                  Expanded(child: Divider(color: Colors.black12)),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'ATAU DAFTAR DENGAN',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.black38,
+                        letterSpacing: 1.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: Colors.black12)),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Google Button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: controller.signupWithGoogle,
+                  icon: const Icon(Icons.g_mobiledata, color: Colors.blue, size: 32),
+                  label: const Text(
+                    'Google',
+                    style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: const BorderSide(color: Colors.black12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ),
@@ -180,6 +219,61 @@ class SignupView extends GetView<SignupController> {
           borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
       ),
+    );
+  }
+
+  Widget _buildTopBar(Color themeColor) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF6B0000), size: 20),
+                onPressed: () => Get.back(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 16),
+              Container(
+                width: 35,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  border: Border.all(color: themeColor.withValues(alpha: 0.1)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Icon(Icons.account_balance, color: Color(0xFF6B0D0D), size: 20),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'KOPERASI SIMPANAN',
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: TextStyle(
+                    color: Color(0xFF6B0D0D),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      
+      ],
     );
   }
 }

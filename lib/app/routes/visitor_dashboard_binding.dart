@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../controllers/visitor_dashboard_controller.dart';
+import '../modules/visitor_dashboard/controllers/visitor_dashboard_controller.dart';
 
 class VisitorDashboardBinding extends Bindings {
   @override
