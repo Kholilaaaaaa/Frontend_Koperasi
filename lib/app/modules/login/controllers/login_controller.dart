@@ -11,6 +11,7 @@ import 'package:pattern_getx_cli/app/network/api_client.dart';
 
 class LoginController extends GetxController {
   final isPasswordVisible = false.obs;
+  final isLoading = false.obs;
   // Secure storage for JWT token
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
@@ -42,6 +43,8 @@ class LoginController extends GetxController {
   }
 
   Future<void> login() async {
+    if (isLoading.value) return;
+
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
       Get.snackbar(
         'Error',
@@ -53,6 +56,7 @@ class LoginController extends GetxController {
     }
 
     try {
+      isLoading.value = true;
       // print('DEBUG: Starting login request to $baseUrl/api/login');
           
       final response = await http.post(
@@ -61,7 +65,7 @@ class LoginController extends GetxController {
           'email': emailController.text,
           'password': passwordController.text,
         },
-      );
+      ).timeout(const Duration(seconds: 10));
 
       // print('DEBUG: Response Status Code: ${response.statusCode}');
       // print('DEBUG: Response Body: ${response.body}');
@@ -124,6 +128,8 @@ class LoginController extends GetxController {
         colorText: Colors.white,
         duration: const Duration(seconds: 5),
       );
+    } finally {
+      isLoading.value = false;
     }
   }
 

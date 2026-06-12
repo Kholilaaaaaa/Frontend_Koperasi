@@ -201,7 +201,7 @@ class MemberDashboardView extends GetView<MemberDashboardController> {
                       ),
                       child: const Text('PLATINUM MEMBER', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)),
                     ),
-                    const Text('EST. 2024', style: TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold)),
+                    Text('ID: ${controller.memberId}', style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ],

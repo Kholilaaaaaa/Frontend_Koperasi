@@ -16,6 +16,8 @@ class MemberDashboardController extends GetxController {
     isDarkMode.value = _box.read('isDarkMode') ?? false;
   }
 
+  String get memberId => _box.read('userId')?.toString() ?? '-';
+
   void changeTabIndex(int index) {
     currentIndex.value = index;
   }

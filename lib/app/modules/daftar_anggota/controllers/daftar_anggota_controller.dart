@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../routes/app_routes.dart';
 import 'package:pattern_getx_cli/app/network/api_client.dart';
+import '../views/scanner_instructions_view.dart';
 
 class DaftarAnggotaController extends GetxController {
   final box = GetStorage();
@@ -34,6 +35,9 @@ class DaftarAnggotaController extends GetxController {
   final genderController = TextEditingController();
   final religionController = TextEditingController();
   final addressController = TextEditingController();
+  var isDuplicate = false.obs;
+  var duplicateReason = ''.obs;
+  var _ocrAlreadyProcessed = false.obs;
 
   // Step 4: Savings
   var selectedSavingsType = 'Simpanan Sukarela'.obs;
@@ -67,9 +71,49 @@ class DaftarAnggotaController extends GetxController {
     super.onClose();
   }
 
+  Future<void> startKtpScannerFlow() async {
+    final result = await Get.to(() => const ScannerInstructionsView(documentType: 'ktp'));
+    
+    if (result == null) return;
+
+    if (result is Map<String, dynamic>) {
+      // Kamera mengembalikan path + data OCR dari server
+      final path = result['path'] as String?;
+      final ocrData = result['ocr_data'] as Map<String, dynamic>?;
+
+      if (path != null) {
+        ktpImage.value = File(path);
+      }
+
+      // Langsung isi field dengan data OCR yang sudah ada dari scan
+      if (ocrData != null && ocrData.isNotEmpty) {
+        nameController.text = ocrData['nama'] ?? '';
+        nikController.text = ocrData['nik'] ?? '';
+        dobController.text = ocrData['ttl'] ?? '';
+        genderController.text = ocrData['jenis_kelamin'] ?? 'Laki-laki';
+        religionController.text = ocrData['agama'] ?? '';
+        addressController.text = ocrData['alamat'] ?? '';
+        isDuplicate.value = ocrData['is_duplicate'] ?? false;
+        duplicateReason.value = ocrData['duplicate_reason'] ?? '';
+        // Tandai bahwa OCR sudah diproses agar tidak dipanggil 2x
+        _ocrAlreadyProcessed.value = true;
+      }
+    } else if (result is String) {
+      // Fallback: hanya path (kamera lama)
+      ktpImage.value = File(result);
+    }
+  }
+
   Future<void> pickImage(String type, ImageSource source) async {
     try {
-      final pickedFile = await picker.pickImage(source: source);
+      // imageQuality: 100 = tanpa kompresi | maxWidth/maxHeight: null = tanpa resize
+      // Penting untuk akurasi OCR backend - gambar harus full resolution
+      final pickedFile = await picker.pickImage(
+        source: source,
+        imageQuality: 100,
+        maxWidth: null,
+        maxHeight: null,
+      );
       if (pickedFile != null) {
         switch (type) {
           case 'ktp':
@@ -126,11 +170,7 @@ class DaftarAnggotaController extends GetxController {
       }
       processOCR();
     } else if (currentStep.value == 3) {
-      if (nameController.text.isEmpty || nikController.text.isEmpty) {
-        Get.snackbar('Error', 'Data OCR tidak boleh kosong', 
-            backgroundColor: Colors.red, colorText: Colors.white);
-        return;
-      }
+      // Data bisa diisi manual jika OCR tidak sempurna, tidak perlu validasi NIK kosong
       currentStep.value = 4;
     } else if (currentStep.value == 4) {
       if (nominalController.text.isEmpty) {
@@ -152,6 +192,13 @@ class DaftarAnggotaController extends GetxController {
 
   Future<void> processOCR() async {
     if (ktpImage.value == null) return;
+
+    // Jika data OCR sudah ada dari proses scan kamera, langsung lanjut ke Step 3
+    if (_ocrAlreadyProcessed.value) {
+      currentStep.value = 3;
+      _ocrAlreadyProcessed.value = false; // reset untuk scan berikutnya
+      return;
+    }
 
     Get.dialog(
       Dialog(
@@ -210,7 +257,7 @@ class DaftarAnggotaController extends GetxController {
         ktpImage.value!.path,
       ));
 
-      var streamedResponse = await request.send().timeout(const Duration(seconds: 30));
+      var streamedResponse = await request.send().timeout(const Duration(seconds: 120));
       var response = await http.Response.fromStream(streamedResponse);
 
       Get.back(); // Close loading dialog
@@ -225,8 +272,23 @@ class DaftarAnggotaController extends GetxController {
         genderController.text = data['jenis_kelamin'] ?? "Laki-laki";
         religionController.text = data['agama'] ?? "";
         addressController.text = data['alamat'] ?? "";
+        
+        isDuplicate.value = data['is_duplicate'] ?? false;
+        duplicateReason.value = data['duplicate_reason'] ?? "";
 
+        // Lanjut ke Step 3 agar user bisa mengoreksi atau mengisi data secara manual (UX Improvement)
         currentStep.value = 3;
+
+        if (nameController.text.trim().isEmpty || nikController.text.trim().isEmpty) {
+          Get.snackbar(
+            'Informasi OCR',
+            'Beberapa data KTP (Nama/NIK) kurang terbaca jelas secara otomatis. Silakan periksa kembali dan isi secara manual.',
+            backgroundColor: Colors.orange,
+            colorText: Colors.white,
+            duration: const Duration(seconds: 6),
+            snackPosition: SnackPosition.BOTTOM,
+          );
+        }
       } else if (response.statusCode == 401) {
         await const FlutterSecureStorage().delete(key: 'jwt_token');
         box.write('isLoggedIn', false);
@@ -298,7 +360,7 @@ class DaftarAnggotaController extends GetxController {
         request.files.add(await http.MultipartFile.fromPath('tanda_tangan', signatureImage.value!.path));
       }
 
-      var streamedResponse = await request.send().timeout(const Duration(seconds: 60));
+      var streamedResponse = await request.send().timeout(const Duration(seconds: 120));
       var response = await http.Response.fromStream(streamedResponse);
 
       Get.back(); // Close loading dialog

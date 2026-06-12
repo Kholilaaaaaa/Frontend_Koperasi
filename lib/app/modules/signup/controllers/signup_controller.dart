@@ -10,6 +10,7 @@ import 'package:pattern_getx_cli/app/network/api_client.dart';
 class SignupController extends GetxController {
   final isPasswordVisible = false.obs;
   final isConfirmPasswordVisible = false.obs;
+  final isLoading = false.obs;
 
   final nameController = TextEditingController();
   final emailOrPhoneController = TextEditingController();
@@ -46,6 +47,8 @@ class SignupController extends GetxController {
   }
 
   Future<void> signup() async {
+    if (isLoading.value) return;
+
     if (nameController.text.isEmpty ||
         emailOrPhoneController.text.isEmpty ||
         passwordController.text.isEmpty ||
@@ -70,7 +73,7 @@ class SignupController extends GetxController {
     }
 
     try {
-
+      isLoading.value = true;
       final identity = emailOrPhoneController.text;
       
       final response = await http.post(
@@ -81,7 +84,7 @@ class SignupController extends GetxController {
           'identity': identity,
           'password': passwordController.text,
         }),
-      );
+      ).timeout(const Duration(seconds: 10));
 
       final data = jsonDecode(response.body);
 
@@ -125,6 +128,8 @@ class SignupController extends GetxController {
         colorText: Colors.white,
         duration: const Duration(seconds: 5),
       );
+    } finally {
+      isLoading.value = false;
     }
   }
 

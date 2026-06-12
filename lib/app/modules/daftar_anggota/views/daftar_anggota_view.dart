@@ -198,7 +198,7 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                   'Pastikan foto jelas dan terbaca',
                   Icons.badge_outlined,
                   false,
-                  () => _showImageSourceDialog('ktp'),
+                  () => controller.startKtpScannerFlow(),
                 )
               : Container(
                   padding: const EdgeInsets.all(20),
@@ -273,7 +273,7 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                         children: [
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: () => _showImageSourceDialog('ktp'),
+                              onPressed: () => controller.startKtpScannerFlow(),
                               icon: const Icon(Icons.refresh, size: 18, color: Colors.white),
                               label: const Text('Ganti Foto', style: TextStyle(color: Colors.white)),
                               style: ElevatedButton.styleFrom(
@@ -338,7 +338,61 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                     height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 20),
+                
+                // Duplicate check status card
+                Obx(() {
+                  final isDup = controller.isDuplicate.value;
+                  final reason = controller.duplicateReason.value;
+                  return Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDup ? const Color(0xFFFCE4E4) : const Color(0xFFE8F5E9),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isDup ? Colors.red.withOpacity(0.3) : Colors.green.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          isDup ? Icons.warning_amber_rounded : Icons.check_circle_outline,
+                          color: isDup ? Colors.red : Colors.green,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isDup ? 'Teridentifikasi Duplikat!' : 'Data Bersih & Terverifikasi',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: isDup ? Colors.red[900] : Colors.green[900],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                isDup
+                                    ? reason
+                                    : 'KTP belum terdaftar di sistem koperasi. Anda dapat melanjutkan pendaftaran.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDup ? Colors.red[700] : Colors.green[700],
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                const SizedBox(height: 20),
                 
                 // Data Fields Card
                 Container(
@@ -449,7 +503,24 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
           // Bottom Button
           Padding(
             padding: const EdgeInsets.all(24.0),
-            child: _buildActionButton('Pilih Simpanan', controller.nextStep),
+            child: Obx(() {
+              final isDup = controller.isDuplicate.value;
+              return _buildActionButton(
+                isDup ? 'KTP Terduplikasi' : 'Pilih Simpanan',
+                isDup
+                    ? () {
+                        Get.snackbar(
+                          'Pendaftaran Ditolak',
+                          'KTP Anda sudah terdaftar di sistem koperasi. Silakan hubungi admin.',
+                          backgroundColor: Colors.red,
+                          colorText: Colors.white,
+                          snackPosition: SnackPosition.BOTTOM,
+                        );
+                      }
+                    : controller.nextStep,
+                color: isDup ? Colors.grey : themeColor,
+              );
+            }),
           ),
         ],
       ),
@@ -494,6 +565,7 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
             children: [
               Expanded(
                 child: TextField(
+                  readOnly: false,
                   controller: textController,
                   maxLines: maxLines,
                   style: const TextStyle(
@@ -699,13 +771,13 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
     );
   }
 
-  Widget _buildActionButton(String text, VoidCallback onPressed) {
+  Widget _buildActionButton(String text, VoidCallback onPressed, {Color? color}) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: themeColor,
+          backgroundColor: color ?? themeColor,
           padding: const EdgeInsets.symmetric(vertical: 20),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 0,

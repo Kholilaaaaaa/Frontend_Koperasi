@@ -125,8 +125,8 @@ class LoginView extends GetView<LoginController> {
               const SizedBox(height: 32),
               
               // Login Button
-              ElevatedButton(
-                onPressed: controller.login,
+              Obx(() => ElevatedButton(
+                onPressed: controller.isLoading.value ? null : controller.login,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6B0000),
                   foregroundColor: Colors.white,
@@ -136,18 +136,27 @@ class LoginView extends GetView<LoginController> {
                   ),
                   elevation: 0,
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
-                      'Masuk',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(width: 8),
-                    Icon(Icons.login, size: 20),
-                  ],
-                ),
-              ),
+                child: controller.isLoading.value
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Text(
+                            'Masuk',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(Icons.login, size: 20),
+                        ],
+                      ),
+              )),
               
               const SizedBox(height: 32),
               

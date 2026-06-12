@@ -178,7 +178,24 @@ class SettingsView extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.network('https://ui-avatars.com/api/?name=Budi+Santoso&background=6B0D0D&color=fff', width: 60, height: 60),
+              child: Image.network(
+                'https://ui-avatars.com/api/?name=Budi+Santoso&background=6B0D0D&color=fff', 
+                width: 60, 
+                height: 60,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 60,
+                    height: 60,
+                    color: themeColor,
+                    child: const Center(
+                      child: Text(
+                        'BS',
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
