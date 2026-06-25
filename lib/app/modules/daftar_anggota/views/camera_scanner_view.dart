@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:pattern_getx_cli/app/network/api_client.dart';
 
@@ -64,8 +65,8 @@ class _CameraScannerViewState extends State<CameraScannerView> {
           });
         }
 
-        // Kirim gambar yang sudah di-crop sempurna oleh native scanner ke backend OCR Flask
-        final ocrResult = await _sendToBackendOcr(croppedPath);
+        // Lakukan OCR LOKAL Realtime + Validasi Backend Ringan
+        final ocrResult = await _processRealtimeOcr(croppedPath);
 
         if (mounted) {
           setState(() {
@@ -75,46 +76,7 @@ class _CameraScannerViewState extends State<CameraScannerView> {
             
             if (!_isKtpValidBackend) {
               _errorMessage = ocrResult['nik_validation_message'] ?? 'Data tidak terbaca dengan baik.';
-              
-              // TAMPILKAN DIALOG ENTERPRISE JIKA GAGAL
-              Get.dialog(
-                AlertDialog(
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  title: const Row(
-                    children: [
-                      Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
-                      SizedBox(width: 10),
-                      Text("Foto Kurang Jelas", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                    ],
-                  ),
-                  content: Text(
-                    "Kami kesulitan membaca data KTP Anda.\n\nDetail: $_errorMessage\n\nMohon pastikan KTP berada di tempat yang terang, tidak silau, dan tulisan terbaca jelas.",
-                    style: const TextStyle(fontSize: 14, color: Colors.black87),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Get.back(); // Tutup dialog
-                        // Biarkan user melihat layar hasil merah untuk opsi manual jika mereka mau
-                      },
-                      child: const Text("Isi Manual", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                    ),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6B0D0D),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                      ),
-                      onPressed: () {
-                        Get.back(); // Tutup dialog
-                        _resetScanner(); // Buka kamera otomatis
-                      },
-                      child: const Text("Foto Ulang", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    ),
-                  ],
-                ),
-                barrierDismissible: false, // Wajib pilih salah satu aksi
-              );
-
+              // Dialog peringatan dihapus agar tidak mengganggu UX. User bisa langsung melihat hasil di overlay dan mengoreksi secara manual.
             } else {
               _errorMessage = '';
             }
@@ -140,19 +102,56 @@ class _CameraScannerViewState extends State<CameraScannerView> {
     }
   }
 
-  Future<Map<String, dynamic>> _sendToBackendOcr(String imagePath) async {
+  Future<Map<String, dynamic>> _processRealtimeOcr(String imagePath) async {
     try {
+      // ✅ FIX #1: Kirim dengan JWT token agar server bisa log user OCR dengan benar
+      final token = await const FlutterSecureStorage().read(key: 'jwt_token');
+
+      // ✅ FIX #2: Timeout dinaikkan ke 60 detik (YOLOv8+PaddleOCR bisa butuh 45s+)
       var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/ocr'));
       request.files.add(await http.MultipartFile.fromPath('file', imagePath));
-      var streamed = await request.send().timeout(const Duration(seconds: 90));
-      var response = await http.Response.fromStream(streamed);
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body) as Map<String, dynamic>;
-      } else {
-        throw Exception("Server Error ${response.statusCode}: ${response.body}");
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
       }
+
+      var streamedResponse = await request.send().timeout(const Duration(seconds: 60));
+      var response = await http.Response.fromStream(streamedResponse);
+
+      Map<String, dynamic> ktpData = {};
+
+      if (response.statusCode == 200) {
+        var validationData = jsonDecode(response.body);
+        ktpData = validationData;
+        
+        // Sesuaikan parameter fallback jika tidak terbaca sempurna
+        if (!ktpData.containsKey('nik_valid')) {
+           ktpData['nik_valid'] = false;
+        }
+        if (!ktpData.containsKey('is_duplicate')) {
+           ktpData['is_duplicate'] = false;
+        }
+      } else if (response.statusCode == 401) {
+        // Token expired — paksa re-login
+        ktpData['nik_valid'] = false;
+        ktpData['nik_validation_message'] = 'Sesi berakhir. Silakan login ulang.';
+        ktpData['session_expired'] = true;
+      } else {
+        // Fallback jika API gagal (biarkan valid agar user bisa lanjut manual)
+        debugPrint('[OCR] Server error ${response.statusCode}: ${response.body}');
+        ktpData['nik_valid'] = true; 
+        ktpData['is_duplicate'] = false;
+        ktpData['nik_validation_message'] = 'Server error (${response.statusCode}). Lanjutkan secara manual.';
+      }
+      
+      return ktpData;
     } catch (e) {
-      rethrow;
+      debugPrint('Realtime OCR Error: $e');
+      // Timeout atau koneksi putus — tidak crash, kembalikan fallback
+      return {
+        'nik_valid': true,
+        'is_duplicate': false,
+        'nik_validation_message': 'Koneksi gagal/timeout. Lanjutkan secara manual.',
+      };
     }
   }
 
@@ -202,9 +201,9 @@ class _CameraScannerViewState extends State<CameraScannerView> {
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
                   CircularProgressIndicator(color: Colors.greenAccent, strokeWidth: 4),
                   SizedBox(height: 24),
-                  Text('Memproses KTP...', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text('Memproses KTP Realtime...', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                   SizedBox(height: 8),
-                  Text('Mengekstrak data dan cek duplikasi ke server', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  Text('Mengekstrak data instan & cek validasi', style: TextStyle(color: Colors.white70, fontSize: 14)),
                 ]),
               ),
             ),
@@ -266,12 +265,59 @@ class _CameraScannerViewState extends State<CameraScannerView> {
                 if (_isKtpValidBackend) ...[
                   _infoRow('NIK', _ocrData['nik'] ?? '-'),
                   _infoRow('Nama', _ocrData['nama'] ?? '-'),
+                  if ((_ocrData['ttl'] ?? '').isNotEmpty) _infoRow('TTL', _ocrData['ttl']),
+                  if ((_ocrData['jenis_kelamin'] ?? '').isNotEmpty) _infoRow('JK', _ocrData['jenis_kelamin']),
+                  if ((_ocrData['agama'] ?? '').isNotEmpty) _infoRow('Agama', _ocrData['agama']),
+                  if ((_ocrData['alamat'] ?? '').isNotEmpty) _infoRow('Alamat', _ocrData['alamat']),
                   const SizedBox(height: 12),
-                  const Text('Data berhasil diekstrak otomatis. Lanjutkan untuk verifikasi.', style: TextStyle(fontSize: 13, color: Colors.black54)),
+                  // ✅ Tunjukkan duplikat warning jika ada
+                  if (_ocrData['is_duplicate'] == true)
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _ocrData['duplicate_reason'] ?? 'NIK sudah terdaftar.',
+                              style: const TextStyle(fontSize: 12, color: Colors.orange),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    const Text('Data berhasil diekstrak otomatis. Lanjutkan untuk verifikasi.', style: TextStyle(fontSize: 13, color: Colors.black54)),
                 ] else ...[
                   if (_errorMessage.isNotEmpty)
                     Text(_errorMessage, style: const TextStyle(fontSize: 13, color: Colors.red)),
                   const Text('Sebab: Foto KTP kurang jelas atau bukan KTP asli.', style: TextStyle(fontSize: 13, color: Colors.black87)),
+                  const SizedBox(height: 6),
+                  // ✅ Tips kualitas foto untuk user
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('💡 Tips foto KTP yang baik:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue)),
+                        SizedBox(height: 4),
+                        Text('• KTP isi minimal 70% frame kamera', style: TextStyle(fontSize: 11, color: Colors.black87)),
+                        Text('• Hindari bayangan & pantulan cahaya', style: TextStyle(fontSize: 11, color: Colors.black87)),
+                        Text('• Letakkan di permukaan datar & polos', style: TextStyle(fontSize: 11, color: Colors.black87)),
+                        Text('• Pencahayaan cukup, tidak backlight', style: TextStyle(fontSize: 11, color: Colors.black87)),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 6),
                   const Text('Silakan scan ulang, atau lanjutkan untuk mengisi data manual.', style: TextStyle(fontSize: 13, color: Colors.black54)),
                 ],

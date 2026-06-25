@@ -9,6 +9,7 @@ import 'package:pattern_getx_cli/app/network/api_client.dart';
 class DashboardStatusController extends GetxController {
   final box = GetStorage();
   var userName = 'Pengguna'.obs;
+  var userAvatarPath = ''.obs;
   
   var status = 'pending'.obs; // 'pending', 'approved', 'rejected'
   var rejectionReason = ''.obs;
@@ -19,6 +20,7 @@ class DashboardStatusController extends GetxController {
   void onInit() {
     super.onInit();
     userName.value = box.read('userName') ?? 'Pengguna';
+    userAvatarPath.value = box.read('userAvatarPath') ?? '';
     fetchStatus();
     _startPolling();
   }
@@ -57,6 +59,19 @@ class DashboardStatusController extends GetxController {
         if (data['full_name'] != null) {
           userName.value = data['full_name'];
           box.write('userName', data['full_name']);
+        }
+        if (data['member_id'] != null) {
+          box.write('memberId', data['member_id']);
+        }
+        if (data['avatar_path'] != null) {
+          userAvatarPath.value = data['avatar_path'];
+          box.write('userAvatarPath', data['avatar_path']);
+        }
+        if (data['address'] != null) {
+          box.write('userAddress', data['address']);
+        }
+        if (data['phone'] != null) {
+          box.write('userPhone', data['phone']);
         }
         
         if (status.value == 'rejected' && data['registration_details'] != null) {

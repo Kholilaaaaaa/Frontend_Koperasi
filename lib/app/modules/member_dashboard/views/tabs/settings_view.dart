@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/member_dashboard_controller.dart';
+import 'dart:io';
+import '../../../../modules/dashboard_status/controllers/dashboard_status_controller.dart';
+import 'package:get_storage/get_storage.dart';
 import '../../../../routes/app_routes.dart';
 
 class SettingsView extends StatelessWidget {
@@ -33,7 +36,7 @@ class SettingsView extends StatelessWidget {
             const SizedBox(height: 32),
             
             _buildSectionTitle(context, 'profile'.tr),
-            _buildProfileCard(context),
+                  _buildProfileCard(context),
             const SizedBox(height: 12),
             _buildVerifiedEmail(context),
             
@@ -165,6 +168,11 @@ class SettingsView extends StatelessWidget {
   }
 
   Widget _buildProfileCard(BuildContext context) {
+    final box = GetStorage();
+    DashboardStatusController? ds;
+    try {
+      if (Get.isRegistered<DashboardStatusController>()) ds = Get.find<DashboardStatusController>();
+    } catch (_) {}
     return GestureDetector(
       onTap: () => Get.toNamed(Routes.PROFILE),
       child: Container(
@@ -176,35 +184,56 @@ class SettingsView extends StatelessWidget {
         ),
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                'https://ui-avatars.com/api/?name=Budi+Santoso&background=6B0D0D&color=fff', 
-                width: 60, 
-                height: 60,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 60,
-                    height: 60,
-                    color: themeColor,
-                    child: const Center(
-                      child: Text(
-                        'BS',
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+            Obx(() {
+              final _ = Get.find<MemberDashboardController>().count.value; // Prevent Obx crash if ds is null
+              final avatarPath = ds?.userAvatarPath.value ?? box.read('userAvatarPath') ?? '';
+              if (avatarPath.isNotEmpty) {
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.file(
+                    File(avatarPath), 
+                    width: 60, height: 60, fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle, size: 60, color: Colors.grey),
+                  ),
+                );
+              }
+              final name = ds?.userName.value ?? box.read('userName') ?? 'Budi Santoso';
+              final encoded = Uri.encodeComponent(name);
+              final url = 'https://ui-avatars.com/api/?name=$encoded&background=6B0D0D&color=fff';
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  url, 
+                  width: 60, height: 60, fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle, size: 60, color: Colors.grey),
+                ),
+              );
+            }),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Budi Santoso', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87)),
+                  Obx(() {
+                    final _ = Get.find<MemberDashboardController>().count.value; // Prevent Obx crash
+                    final name = ds?.userName.value ?? box.read('userName') ?? 'Budi Santoso';
+                    return Text(
+                      name, 
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  }),
                   const SizedBox(height: 4),
-                  Text('ID Anggota: #KS-B8291', style: TextStyle(fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black38)),
+                  Builder(builder: (context) {
+                    final id = box.read('memberId') ?? '#KS-B8291';
+                    return Text(
+                      'ID Anggota: $id', 
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black38),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  }),
                 ],
               ),
             ),
@@ -227,7 +256,15 @@ class SettingsView extends StatelessWidget {
           const Icon(Icons.mail_outline, size: 18, color: Colors.black38),
           const SizedBox(width: 12),
           Expanded(
-            child: Text('budi.santoso@email.com', style: TextStyle(fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87)),
+            child: Builder(builder: (context) {
+              final email = GetStorage().read('userEmail') ?? 'budi.santoso@email.com';
+              return Text(
+                email, 
+                style: TextStyle(fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              );
+            }),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -339,7 +376,7 @@ class SettingsView extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         ElevatedButton.icon(
-          onPressed: () => Get.offAllNamed('/login'),
+          onPressed: () => Get.find<MemberDashboardController>().logout(),
           icon: const Icon(Icons.logout, size: 18),
           label: Text('keluar_akun'.tr),
           style: ElevatedButton.styleFrom(

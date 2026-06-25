@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:io';
 import '../controllers/profile_controller.dart';
 
 class ProfileView extends GetView<ProfileController> {
@@ -56,21 +57,39 @@ class ProfileView extends GetView<ProfileController> {
             ),
             child: CircleAvatar(
               radius: 60,
-              backgroundImage: const NetworkImage('https://ui-avatars.com/api/?name=Budi+Santoso&background=6B0D0D&color=fff'),
               backgroundColor: themeColor.withAlpha(25),
+              child: Obx(() {
+                  if (controller.avatarPath.value.isNotEmpty) {
+                    return CircleAvatar(
+                      radius: 60,
+                      backgroundImage: FileImage(File(controller.avatarPath.value)),
+                      backgroundColor: Colors.transparent,
+                    );
+                  }
+                  final encoded = Uri.encodeComponent(controller.name.value);
+                  final url = 'https://ui-avatars.com/api/?name=$encoded&background=6B0D0D&color=fff';
+                  return CircleAvatar(
+                    radius: 60,
+                    backgroundImage: NetworkImage(url),
+                    backgroundColor: Colors.transparent,
+                  );
+                }),
             ),
           ),
           Positioned(
             bottom: 0,
             right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: themeColor,
-                shape: BoxShape.circle,
+              child: GestureDetector(
+                onTap: () => controller.pickAvatarImage(),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(
+                    color: themeColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 20),
+                ),
               ),
-              child: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 20),
-            ),
           ),
         ],
       ),
@@ -85,28 +104,28 @@ class ProfileView extends GetView<ProfileController> {
           context: context,
           label: 'NAMA LENGKAP',
           icon: Icons.person_outline,
-          controller: TextEditingController(text: controller.name.value),
+          controller: controller.nameController,
         ),
         const SizedBox(height: 20),
         _buildInputField(
           context: context,
           label: 'EMAIL',
           icon: Icons.mail_outline,
-          controller: TextEditingController(text: controller.email.value),
+          controller: controller.emailController,
         ),
         const SizedBox(height: 20),
         _buildInputField(
           context: context,
           label: 'NOMOR TELEPON',
           icon: Icons.phone_android_outlined,
-          controller: TextEditingController(text: controller.phone.value),
+          controller: controller.phoneController,
         ),
         const SizedBox(height: 20),
         _buildInputField(
           context: context,
           label: 'ALAMAT',
           icon: Icons.location_on_outlined,
-          controller: TextEditingController(text: controller.address.value),
+          controller: controller.addressController,
           maxLines: 3,
         ),
         const SizedBox(height: 20),
@@ -114,7 +133,7 @@ class ProfileView extends GetView<ProfileController> {
           context: context,
           label: 'ID ANGGOTA',
           icon: Icons.badge_outlined,
-          controller: TextEditingController(text: controller.memberId.value),
+          controller: controller.memberIdController,
           enabled: false,
         ),
       ],

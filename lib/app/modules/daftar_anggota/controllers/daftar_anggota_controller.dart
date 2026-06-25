@@ -10,6 +10,7 @@ import '../../../routes/app_routes.dart';
 import 'package:pattern_getx_cli/app/network/api_client.dart';
 import '../views/scanner_instructions_view.dart';
 
+
 class DaftarAnggotaController extends GetxController {
   final box = GetStorage();
   final picker = ImagePicker();
@@ -138,14 +139,68 @@ class DaftarAnggotaController extends GetxController {
 
   void nextStep() {
     if (currentStep.value == 1) {
-      if (loginType.value == 'email' && phoneController.text.isEmpty) {
-        Get.snackbar('Error', 'Nomor telepon harus diisi', backgroundColor: Colors.red, colorText: Colors.white);
-        return;
-      }
+      // Validasi email jika login via phone
       if (loginType.value == 'phone' && emailController.text.isEmpty) {
         Get.snackbar('Error', 'Email harus diisi', backgroundColor: Colors.red, colorText: Colors.white);
         return;
       }
+
+      // Validasi nomor telepon (wajib untuk semua)
+      final phone = phoneController.text.replaceAll(RegExp(r'[\s\-]'), ''); // hapus spasi & strip
+      if (phone.isEmpty) {
+        Get.snackbar(
+          'Nomor Telepon Tidak Valid',
+          'Wajib isi nomor telepon yang benar dan aktif.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+        );
+        return;
+      }
+
+      // Hapus leading 0 jika ada (karena prefix +62 sudah ditampilkan)
+      final cleanPhone = phone.startsWith('0') ? phone.substring(1) : phone;
+
+      // Harus angka saja
+      if (!RegExp(r'^\d+$').hasMatch(cleanPhone)) {
+        Get.snackbar(
+          'Nomor Telepon Tidak Valid',
+          'Nomor telepon hanya boleh berisi angka.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+        );
+        return;
+      }
+
+      // Harus dimulai dengan 8 (format Indonesia: 8xx setelah +62)
+      if (!cleanPhone.startsWith('8')) {
+        Get.snackbar(
+          'Nomor Telepon Tidak Valid',
+          'Wajib isi nomor telepon yang benar dan aktif. Contoh: 812 3456 7890',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+        );
+        return;
+      }
+
+      // Panjang nomor harus 9-12 digit (tanpa leading 0, setelah +62)
+      if (cleanPhone.length < 9 || cleanPhone.length > 12) {
+        Get.snackbar(
+          'Nomor Telepon Tidak Valid',
+          'Wajib isi nomor telepon yang benar dan aktif (9-12 digit setelah +62).',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+        );
+        return;
+      }
+
       currentStep.value = 2;
     } else if (currentStep.value == 2) {
       if (ktpImage.value == null) {
@@ -244,20 +299,16 @@ class DaftarAnggotaController extends GetxController {
     );
 
     try {
+      // Kirim gambar ke Backend (PaddleOCR + YOLOv8)
       var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/ocr'));
-      
+      request.files.add(await http.MultipartFile.fromPath('file', ktpImage.value!.path));
+
       final token = await const FlutterSecureStorage().read(key: 'jwt_token');
       if (token != null) {
         request.headers['Authorization'] = 'Bearer $token';
       }
-      
-      // Tambahkan file KTP
-      request.files.add(await http.MultipartFile.fromPath(
-        'file', // Nama field di Flask: request.files['file']
-        ktpImage.value!.path,
-      ));
 
-      var streamedResponse = await request.send().timeout(const Duration(seconds: 120));
+      var streamedResponse = await request.send().timeout(const Duration(seconds: 60)); // sama dengan camera_scanner_view.dart
       var response = await http.Response.fromStream(streamedResponse);
 
       Get.back(); // Close loading dialog
@@ -265,7 +316,7 @@ class DaftarAnggotaController extends GetxController {
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body);
         
-        // Isi form dengan data dari Flask
+        // Isi form dengan data dari Backend
         nameController.text = data['nama'] ?? "";
         nikController.text = data['nik'] ?? "";
         dobController.text = data['ttl'] ?? "";
@@ -273,22 +324,62 @@ class DaftarAnggotaController extends GetxController {
         religionController.text = data['agama'] ?? "";
         addressController.text = data['alamat'] ?? "";
         
+        // Validasi dan Duplikat dari backend
         isDuplicate.value = data['is_duplicate'] ?? false;
         duplicateReason.value = data['duplicate_reason'] ?? "";
 
-        // Lanjut ke Step 3 agar user bisa mengoreksi atau mengisi data secara manual (UX Improvement)
-        currentStep.value = 3;
+        // Hitung field yang berhasil terisi
+        int filledFields = 0;
+        if (nameController.text.isNotEmpty) filledFields++;
+        if (nikController.text.isNotEmpty) filledFields++;
+        if (dobController.text.isNotEmpty) filledFields++;
+        if (addressController.text.isNotEmpty) filledFields++;
 
-        if (nameController.text.trim().isEmpty || nikController.text.trim().isEmpty) {
-          Get.snackbar(
-            'Informasi OCR',
-            'Beberapa data KTP (Nama/NIK) kurang terbaca jelas secara otomatis. Silakan periksa kembali dan isi secara manual.',
-            backgroundColor: Colors.orange,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 6),
-            snackPosition: SnackPosition.BOTTOM,
-          );
-        }
+        // Tampilkan Dialog Hasil OCR
+        Get.defaultDialog(
+          title: "Hasil Scan KTP",
+          titleStyle: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF6B0D0D)),
+          content: Column(
+            children: [
+              Icon(
+                filledFields >= 3 ? Icons.check_circle : Icons.warning_amber_rounded,
+                color: filledFields >= 3 ? Colors.green : Colors.orange,
+                size: 50,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                filledFields >= 3 
+                    ? "Berhasil mengekstrak data KTP Anda!" 
+                    : "Beberapa data tidak terbaca sempurna. Mohon lengkapi secara manual.",
+                textAlign: TextAlign.center,
+              ),
+              if (isDuplicate.value) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.red.shade200),
+                  ),
+                  child: Text(
+                    "⚠️ ${duplicateReason.value}",
+                    style: TextStyle(color: Colors.red.shade700, fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              ]
+            ],
+          ),
+          textConfirm: "Lanjutkan",
+          confirmTextColor: Colors.white,
+          buttonColor: const Color(0xFF6B0D0D),
+          onConfirm: () {
+            Get.back(); // Tutup dialog
+            // Lanjut ke Step 3 — user bisa koreksi manual jika ada yang kurang
+            currentStep.value = 3;
+          },
+        );
       } else if (response.statusCode == 401) {
         await const FlutterSecureStorage().delete(key: 'jwt_token');
         box.write('isLoggedIn', false);

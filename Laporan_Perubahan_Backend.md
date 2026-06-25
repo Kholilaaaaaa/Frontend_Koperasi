@@ -6,7 +6,7 @@ Dokumen ini memuat seluruh daftar perubahan di sisi Backend (Python Flask) dari 
 
 ## 1. Konfigurasi Endpoint Server (`config.py` & `main.py`)
 Pastikan server Flask terikat pada host `0.0.0.0` agar dapat diakses dari jaringan lokal oleh perangkat mobile.
-*   **IP Server Baru:** `http://192.168.110.39:5000` (atau sesuaikan dengan IP LAN saat ini).
+*   **IP Server Baru:** `http://192.168.56.46:5000` (atau sesuaikan dengan IP LAN saat ini).
 *   **Binding Port:** `5000` pada host `0.0.0.0`.
 
 ---

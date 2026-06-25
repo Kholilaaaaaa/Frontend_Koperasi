@@ -292,9 +292,9 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
           const Text('DOKUMEN PENDUKUNG', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black38, letterSpacing: 1)),
           const SizedBox(height: 16),
           
-          _buildDocItem('Kartu Anggota', 'Format PDF atau JPG (Max 5MB)', Icons.card_membership_outlined, controller.kartuAnggotaImage.value != null, () => _showImageSourceDialog('kartu_anggota')),
-          _buildDocItem('Pas Foto', 'Wajah tegak lurus, latar polos', Icons.portrait_outlined, controller.pasFotoImage.value != null, () => _showImageSourceDialog('pas_foto')),
-          _buildDocItem('Tanda Tangan', 'Gunakan tinta hitam di kertas', Icons.gesture, controller.signatureImage.value != null, () => _showImageSourceDialog('signature')),
+          _buildDocItem('Kartu Anggota', 'Unggah dari galeri (Max 5MB)', Icons.card_membership_outlined, controller.kartuAnggotaImage.value != null, () => controller.pickImage('kartu_anggota', ImageSource.gallery)),
+          _buildDocItem('Pas Foto', 'Unggah dari galeri, wajah tegak lurus', Icons.portrait_outlined, controller.pasFotoImage.value != null, () => controller.pickImage('pas_foto', ImageSource.gallery)),
+          _buildDocItem('Tanda Tangan', 'Unggah dari galeri, tinta hitam di kertas', Icons.gesture, controller.signatureImage.value != null, () => controller.pickImage('signature', ImageSource.gallery)),
           
           const SizedBox(height: 40),
           _buildActionButton('Proses Verifikasi Sekarang', controller.nextStep),
@@ -411,26 +411,23 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                   ),
                   child: Column(
                     children: [
-                      _buildDataField('NAMA LENGKAP', controller.nameController, true),
+                      _buildDataField('NAMA LENGKAP', controller.nameController),
                       const SizedBox(height: 24),
-                      _buildDataField('NOMOR NIK', controller.nikController, true),
+                      _buildDataField('NOMOR NIK', controller.nikController),
                       const SizedBox(height: 24),
                       _buildDataField(
                         'TANGGAL LAHIR', 
                         controller.dobController, 
-                        true, 
                         suffix: const Icon(Icons.calendar_today_outlined, size: 18, color: Colors.redAccent),
                       ),
                       const SizedBox(height: 24),
-                      _buildDataField('JENIS KELAMIN', controller.genderController, true),
+                      _buildDataField('JENIS KELAMIN', controller.genderController),
                       const SizedBox(height: 24),
-                      _buildDataField('AGAMA', controller.religionController, true),
+                      _buildDataField('AGAMA', controller.religionController),
                       const SizedBox(height: 24),
                       _buildDataField(
                         'ALAMAT LENGKAP', 
                         controller.addressController, 
-                        false,
-                        isReviewRequired: true,
                         maxLines: 3,
                       ),
                     ],
@@ -529,7 +526,10 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
 
   // --- HELPER WIDGETS FOR VALIDATION ---
   
-  Widget _buildDataField(String label, TextEditingController textController, bool isVerified, {Widget? suffix, bool isReviewRequired = false, int maxLines = 1}) {
+  Widget _buildDataField(String label, TextEditingController textController, {Widget? suffix, int maxLines = 1}) {
+    // Otomatis tentukan badge berdasarkan isi field
+    final bool hasData = textController.text.trim().isNotEmpty;
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -545,17 +545,16 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                 letterSpacing: 0.5,
               ),
             ),
-            if (isVerified)
-              _buildBadge('OCR Verified', Colors.green, Icons.check_circle)
-            else if (isReviewRequired)
-              _buildBadge('Review Required', Colors.orange, Icons.edit_note_outlined),
+            hasData
+              ? _buildBadge('OCR Verified', Colors.green, Icons.check_circle)
+              : _buildBadge('Review Required', Colors.orange, Icons.edit_note_outlined),
           ],
         ),
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
-          padding: EdgeInsets.all(isReviewRequired ? 12 : 0),
-          decoration: isReviewRequired
+          padding: !hasData ? const EdgeInsets.all(12) : EdgeInsets.zero,
+          decoration: !hasData
               ? BoxDecoration(
                   color: const Color(0xFFFFF2F2),
                   borderRadius: BorderRadius.circular(12),
@@ -794,62 +793,4 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
     );
   }
 
-  void _showImageSourceDialog(String type) {
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Pilih Sumber Gambar',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: themeColor),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Get.back();
-                      controller.pickImage(type, ImageSource.camera);
-                    },
-                    icon: const Icon(Icons.camera_alt, color: Colors.white),
-                    label: const Text('Kamera', style: TextStyle(color: Colors.white)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: themeColor,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Get.back();
-                      controller.pickImage(type, ImageSource.gallery);
-                    },
-                    icon: Icon(Icons.photo_library, color: themeColor),
-                    label: Text('Galeri', style: TextStyle(color: themeColor)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      side: BorderSide(color: themeColor.withValues(alpha: 0.1)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-          ],
-        ),
-      ),
-    );
-  }
 }

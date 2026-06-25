@@ -124,14 +124,14 @@ class MemberDashboardView extends GetView<MemberDashboardController> {
               letterSpacing: 1.5,
             ),
           ),
-          Text(
-            'selamat_pagi'.tr,
+          Obx(() => Text(
+            controller.dynamicGreeting,
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
               color: Theme.of(context).brightness == Brightness.dark ? Colors.white : themeColor,
             ),
-          ),
+          )),
         ],
       ),
     );
@@ -172,10 +172,10 @@ class MemberDashboardView extends GetView<MemberDashboardController> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                      Text(
-                        'simpanan_sukarela'.tr,
+                      Obx(() => Text(
+                        controller.userName.toUpperCase(),
                         style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
-                      ),
+                      )),
                       Icon(Icons.credit_card, color: Colors.white.withAlpha(128), size: 20),
                     ],
                   ),
@@ -185,10 +185,10 @@ class MemberDashboardView extends GetView<MemberDashboardController> {
                   style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'Rp 0',
-                  style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900),
-                ),
+                Obx(() => Text(
+                  controller.formatCurrency(controller.totalBalance),
+                  style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900),
+                )),
                 const Spacer(),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -201,7 +201,7 @@ class MemberDashboardView extends GetView<MemberDashboardController> {
                       ),
                       child: const Text('PLATINUM MEMBER', style: TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.bold)),
                     ),
-                    Text('ID: ${controller.memberId}', style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold)),
+                    Obx(() => Text('ID: ${controller.memberId}', style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold))),
                   ],
                 ),
               ],
@@ -286,11 +286,11 @@ class MemberDashboardView extends GetView<MemberDashboardController> {
             ),
           ),
           const SizedBox(height: 16),
-          _buildSimpananItem(context, Icons.account_balance_wallet_outlined, 'simpanan_sukarela'.tr, 'Rp 0'),
+          Obx(() => _buildSimpananItem(context, Icons.account_balance_wallet_outlined, 'simpanan_sukarela'.tr, controller.formatCurrency(controller.getBalanceByType('Simpanan Sukarela')))),
           const SizedBox(height: 12),
-          _buildSimpananItem(context, Icons.account_balance, 'simpanan_pokok'.tr, 'Rp 0'),
+          Obx(() => _buildSimpananItem(context, Icons.account_balance, 'simpanan_pokok'.tr, controller.formatCurrency(controller.getBalanceByType('Simpanan Pokok')))),
           const SizedBox(height: 12),
-          _buildSimpananItem(context, Icons.savings_outlined, 'simpanan_wajib'.tr, 'Rp 0'),
+          Obx(() => _buildSimpananItem(context, Icons.savings_outlined, 'simpanan_wajib'.tr, controller.formatCurrency(controller.getBalanceByType('Simpanan Wajib')))),
         ],
       ),
     );

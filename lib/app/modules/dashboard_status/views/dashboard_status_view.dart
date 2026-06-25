@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:io';
 import '../controllers/dashboard_status_controller.dart';
 
 class DashboardStatusView extends GetView<DashboardStatusController> {
@@ -212,18 +213,37 @@ class DashboardStatusView extends GetView<DashboardStatusController> {
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
       child: Row(
         children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              color: themeColor,
-              shape: BoxShape.circle,
-              image: const DecorationImage(
-                image: NetworkImage('https://ui-avatars.com/api/?name=Budi+Santoso&background=6B0D0D&color=fff'),
-                fit: BoxFit.cover,
+          Obx(() {
+            final avatar = controller.userAvatarPath.value;
+            if (avatar.isNotEmpty) {
+              return Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: themeColor,
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                    image: FileImage(File(avatar)),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              );
+            }
+            final encoded = Uri.encodeComponent(controller.userName.value);
+            final url = 'https://ui-avatars.com/api/?name=$encoded&background=6B0D0D&color=fff';
+            return Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: themeColor,
+                shape: BoxShape.circle,
+                image: DecorationImage(
+                  image: NetworkImage(url),
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-          ),
+            );
+          }),
           const SizedBox(width: 16),
           Expanded(
             child: Column(

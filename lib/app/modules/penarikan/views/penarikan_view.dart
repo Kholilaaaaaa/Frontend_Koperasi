@@ -76,8 +76,8 @@ class PenarikanView extends GetView<PenarikanController> {
                   const SizedBox(height: 12),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         'Rp',
                         style: TextStyle(
                           color: Colors.white,
@@ -85,15 +85,15 @@ class PenarikanView extends GetView<PenarikanController> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(width: 8),
-                      Text(
-                        '42.850.000',
-                        style: TextStyle(
+                      const SizedBox(width: 8),
+                      Obx(() => Text(
+                        controller.formattedSelectedSavingBalance,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 36,
                           fontWeight: FontWeight.w900,
                         ),
-                      ),
+                      )),
                     ],
                   ),
                   const SizedBox(height: 24),

@@ -199,6 +199,22 @@ class LoginController extends GetxController {
         final status = (data['status'] ?? 'not_started').toString().toLowerCase();
         // print("DEBUG LOGIN: Final Status check: $status");
 
+        if (data['full_name'] != null) {
+          box.write('userName', data['full_name']);
+        }
+        if (data['member_id'] != null) {
+          box.write('memberId', data['member_id']);
+        }
+        if (data['avatar_path'] != null) {
+          box.write('userAvatarPath', data['avatar_path']);
+        }
+        if (data['address'] != null) {
+          box.write('userAddress', data['address']);
+        }
+        if (data['phone'] != null) {
+          box.write('userPhone', data['phone']);
+        }
+
         if (status == 'approved' || status == 'disetujui' || status == 'aktif' || status == 'acc' || status == 'diterima') {
           // print("DEBUG LOGIN: Status Approved -> Routes.MEMBER_DASHBOARD");
           Get.offAllNamed(Routes.MEMBER_DASHBOARD);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../routes/app_routes.dart';
+import '../../controllers/member_dashboard_controller.dart';
 
 class HistoryView extends StatelessWidget {
   const HistoryView({super.key});
@@ -135,21 +136,29 @@ class HistoryView extends StatelessWidget {
   }
 
   Widget _buildTopSummary() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          _summaryCard('Saldo Aktif', '4.350.000', themeColor),
-          const SizedBox(width: 16),
-          _summaryCard('Total Payroll', '100.000', successColor),
-          const SizedBox(width: 16),
-          _summaryCard('Withdrawal', '4.250.000', Colors.orange),
-          const SizedBox(width: 16),
-        ],
-      ),
-    );
+    final controller = Get.find<MemberDashboardController>();
+    return Obx(() {
+      final data = controller.growthData.value;
+      final totalBalance = data?.savingTrend.totalBalance.toStringAsFixed(0) ?? '0';
+      final totalPayroll = data?.payrollVsWithdrawal.payroll.fold<double>(0, (p, c) => p + c).toStringAsFixed(0) ?? '0';
+      final totalWithdrawal = data?.payrollVsWithdrawal.withdrawal.fold<double>(0, (p, c) => p + c).toStringAsFixed(0) ?? '0';
+      
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Row(
+          children: [
+            _summaryCard('Saldo Aktif', totalBalance, themeColor),
+            const SizedBox(width: 16),
+            _summaryCard('Total Payroll', totalPayroll, successColor),
+            const SizedBox(width: 16),
+            _summaryCard('Withdrawal', totalWithdrawal, Colors.orange),
+            const SizedBox(width: 16),
+          ],
+        ),
+      );
+    });
   }
 
   Widget _summaryCard(String label, String value, Color color) {
@@ -174,21 +183,37 @@ class HistoryView extends StatelessWidget {
   }
 
   Widget _buildSavingsGrid() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          _savingsCard('SIMPANAN POKOK', '1001000001', '100.000'),
-          const SizedBox(width: 16),
-          _savingsCard('SIMPANAN WAJIB', '1002000001', '250.000'),
-          const SizedBox(width: 16),
-          _savingsCard('SIMPANAN SUKARELA', '1003000001', '4.000.000'),
-          const SizedBox(width: 16),
-        ],
-      ),
-    );
+    final controller = Get.find<MemberDashboardController>();
+    return Obx(() {
+      final growthData = controller.growthData.value;
+      if (growthData == null) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      
+      final distributions = growthData.savingTrend.distribution;
+      
+      if (distributions.isEmpty) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          alignment: Alignment.center,
+          child: const Text('Belum ada simpanan saat ini.', style: TextStyle(color: Colors.black38, fontSize: 12, fontWeight: FontWeight.bold)),
+        );
+      }
+      
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Row(
+          children: distributions.map((dist) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: _savingsCard(dist.name.toUpperCase(), '-', dist.value.toStringAsFixed(0)),
+            );
+          }).toList(),
+        ),
+      );
+    });
   }
 
   Widget _savingsCard(String title, String account, String balance) {
@@ -270,10 +295,12 @@ class HistoryView extends StatelessWidget {
       children: [
         const Text('MUTASI TERBARU', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black38, letterSpacing: 1)),
         const SizedBox(height: 16),
-        _mutationItem('Tarik Tunai ATM', '24 Mei, 14:20', '-500.000', 'Success', false),
-        _mutationItem('Payroll Kontribusi', '24 Mei, 09:00', '+100.000', 'Success', true),
-        _mutationItem('Simpanan Wajib', '23 Mei, 10:15', '+250.000', 'Success', true),
-        _mutationItem('Transfer Keluar', '22 Mei, 18:45', '-1.250.000', 'Success', false),
+        const Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 32.0),
+            child: Text('Belum ada riwayat transaksi', style: TextStyle(color: Colors.black38, fontSize: 12)),
+          ),
+        ),
       ],
     );
   }

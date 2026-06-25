@@ -3,8 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 // Base URL for Flask backend. Update as needed.
-const String baseUrl = 'http://192.168.18.119:5000';
-
+const String baseUrl = 'https://hemicranic-justus-jauntily.ngrok-free.dev';
 class ApiClient {
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
