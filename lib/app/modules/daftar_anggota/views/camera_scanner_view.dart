@@ -107,25 +107,34 @@ class _CameraScannerViewState extends State<CameraScannerView> {
       // ✅ FIX #1: Kirim dengan JWT token agar server bisa log user OCR dengan benar
       final token = await const FlutterSecureStorage().read(key: 'jwt_token');
 
-      // ✅ FIX #2: Timeout dinaikkan ke 60 detik (YOLOv8+PaddleOCR bisa butuh 45s+)
+      // ✅ FIX #2: Timeout dinaikkan ke 120 detik (YOLOv8+PaddleOCR bisa butuh >60s di CPU laptop)
       var request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/ocr'));
       request.files.add(await http.MultipartFile.fromPath('file', imagePath));
       if (token != null) {
         request.headers['Authorization'] = 'Bearer $token';
       }
 
-      var streamedResponse = await request.send().timeout(const Duration(seconds: 60));
+      var streamedResponse = await request.send().timeout(const Duration(seconds: 120));
       var response = await http.Response.fromStream(streamedResponse);
 
       Map<String, dynamic> ktpData = {};
 
       if (response.statusCode == 200) {
         var validationData = jsonDecode(response.body);
-        ktpData = validationData;
+        if (validationData is Map) {
+          ktpData = Map<String, dynamic>.from(validationData);
+        } else {
+          ktpData = validationData;
+        }
+        
+        // DEBUG: log semua key yang diterima dari backend
+        debugPrint('[OCR] Response keys: ${ktpData.keys.toList()}');
+        debugPrint('[OCR] nik=${ktpData["nik"]}, nama=${ktpData["nama"]}, nik_valid=${ktpData["nik_valid"]}');
         
         // Sesuaikan parameter fallback jika tidak terbaca sempurna
         if (!ktpData.containsKey('nik_valid')) {
-           ktpData['nik_valid'] = false;
+           // Jika nik_valid tidak ada tapi nik ada dan terisi, anggap valid
+           ktpData['nik_valid'] = (ktpData['nik'] ?? '').toString().length == 16;
         }
         if (!ktpData.containsKey('is_duplicate')) {
            ktpData['is_duplicate'] = false;
@@ -138,9 +147,11 @@ class _CameraScannerViewState extends State<CameraScannerView> {
       } else {
         // Fallback jika API gagal (biarkan valid agar user bisa lanjut manual)
         debugPrint('[OCR] Server error ${response.statusCode}: ${response.body}');
-        ktpData['nik_valid'] = true; 
+        ktpData['nik'] = '';
+        ktpData['nama'] = '';
+        ktpData['nik_valid'] = false; 
         ktpData['is_duplicate'] = false;
-        ktpData['nik_validation_message'] = 'Server error (${response.statusCode}). Lanjutkan secara manual.';
+        ktpData['nik_validation_message'] = 'Server error (${response.statusCode}). Silakan Scan Ulang.';
       }
       
       return ktpData;
@@ -148,9 +159,11 @@ class _CameraScannerViewState extends State<CameraScannerView> {
       debugPrint('Realtime OCR Error: $e');
       // Timeout atau koneksi putus — tidak crash, kembalikan fallback
       return {
-        'nik_valid': true,
+        'nik': '',
+        'nama': '',
+        'nik_valid': false,
         'is_duplicate': false,
-        'nik_validation_message': 'Koneksi gagal/timeout. Lanjutkan secara manual.',
+        'nik_validation_message': 'Koneksi gagal/timeout ($e). Silakan Scan Ulang.',
       };
     }
   }
@@ -182,7 +195,7 @@ class _CameraScannerViewState extends State<CameraScannerView> {
                children: [
                  const CircularProgressIndicator(color: Colors.white),
                  const SizedBox(height: 16),
-                 const Text('Menyiapkan Pemindai Dokumen...', style: TextStyle(color: Colors.white70)),
+                 Text('menyiapkan_pemindai'.tr, style: const TextStyle(color: Colors.white70)),
                ],
              ),
           ),
@@ -197,13 +210,13 @@ class _CameraScannerViewState extends State<CameraScannerView> {
           if (_isAnalyzingBackend)
             Container(
               color: Colors.black.withValues(alpha: 0.85),
-              child: const Center(
+              child: Center(
                 child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  CircularProgressIndicator(color: Colors.greenAccent, strokeWidth: 4),
-                  SizedBox(height: 24),
-                  Text('Memproses KTP Realtime...', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 8),
-                  Text('Mengekstrak data instan & cek validasi', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  const CircularProgressIndicator(color: Colors.greenAccent, strokeWidth: 4),
+                  const SizedBox(height: 24),
+                  Text('memproses_ktp'.tr, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Text('desc_memproses_ktp'.tr, style: const TextStyle(color: Colors.white70, fontSize: 14)),
                 ]),
               ),
             ),
@@ -224,7 +237,7 @@ class _CameraScannerViewState extends State<CameraScannerView> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(children: [
-            const Text('HASIL VALIDASI KTP', style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+            Text('hasil_validasi_ktp'.tr, style: const TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
             const SizedBox(height: 16),
 
             // Gambar KTP hasil crop
@@ -238,7 +251,7 @@ class _CameraScannerViewState extends State<CameraScannerView> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(13),
                   child: _croppedImagePath.isNotEmpty
-                      ? Image.file(File(_croppedImagePath), fit: BoxFit.contain)
+                      ? Image.file(File(_croppedImagePath), fit: BoxFit.contain, cacheWidth: 800)
                       : Container(),
                 ),
               ),
@@ -255,20 +268,20 @@ class _CameraScannerViewState extends State<CameraScannerView> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      _isKtpValidBackend ? 'KTP Berhasil Dibaca' : 'KTP Tidak Terbaca',
+                      _isKtpValidBackend ? 'ktp_berhasil_dibaca'.tr : 'ktp_tidak_terbaca'.tr,
                       style: TextStyle(color: _isKtpValidBackend ? Colors.green[800] : Colors.red[800], fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ]),
                 const Divider(height: 24, thickness: 1.5),
 
-                if (_isKtpValidBackend) ...[
-                  _infoRow('NIK', _ocrData['nik'] ?? '-'),
-                  _infoRow('Nama', _ocrData['nama'] ?? '-'),
-                  if ((_ocrData['ttl'] ?? '').isNotEmpty) _infoRow('TTL', _ocrData['ttl']),
-                  if ((_ocrData['jenis_kelamin'] ?? '').isNotEmpty) _infoRow('JK', _ocrData['jenis_kelamin']),
-                  if ((_ocrData['agama'] ?? '').isNotEmpty) _infoRow('Agama', _ocrData['agama']),
-                  if ((_ocrData['alamat'] ?? '').isNotEmpty) _infoRow('Alamat', _ocrData['alamat']),
+                if (_isKtpValidBackend || (_ocrData['nik'] ?? '').toString().isNotEmpty) ...[
+                  _infoRow('nik'.tr, _ocrData['nik']?.toString() ?? '-'),
+                  _infoRow('nama'.tr, _ocrData['nama']?.toString() ?? '-'),
+                  if ((_ocrData['ttl'] ?? '').toString().isNotEmpty) _infoRow('ttl'.tr, _ocrData['ttl'].toString()),
+                  if ((_ocrData['jenis_kelamin'] ?? '').toString().isNotEmpty) _infoRow('JK', _ocrData['jenis_kelamin'].toString()),
+                  if ((_ocrData['agama'] ?? '').toString().isNotEmpty) _infoRow('agama_title'.tr, _ocrData['agama'].toString()),
+                  if ((_ocrData['alamat'] ?? '').toString().isNotEmpty) _infoRow('alamat_title'.tr, _ocrData['alamat'].toString()),
                   const SizedBox(height: 12),
                   // ✅ Tunjukkan duplikat warning jika ada
                   if (_ocrData['is_duplicate'] == true)
@@ -285,7 +298,7 @@ class _CameraScannerViewState extends State<CameraScannerView> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              _ocrData['duplicate_reason'] ?? 'NIK sudah terdaftar.',
+                              _ocrData['duplicate_reason'] ?? 'nik_terdaftar'.tr,
                               style: const TextStyle(fontSize: 12, color: Colors.orange),
                             ),
                           ),
@@ -293,11 +306,11 @@ class _CameraScannerViewState extends State<CameraScannerView> {
                       ),
                     )
                   else
-                    const Text('Data berhasil diekstrak otomatis. Lanjutkan untuk verifikasi.', style: TextStyle(fontSize: 13, color: Colors.black54)),
+                    Text('data_ekstrak_otomatis'.tr, style: const TextStyle(fontSize: 13, color: Colors.black54)),
                 ] else ...[
                   if (_errorMessage.isNotEmpty)
                     Text(_errorMessage, style: const TextStyle(fontSize: 13, color: Colors.red)),
-                  const Text('Sebab: Foto KTP kurang jelas atau bukan KTP asli.', style: TextStyle(fontSize: 13, color: Colors.black87)),
+                  Text('sebab_ktp_tidak_terbaca'.tr, style: const TextStyle(fontSize: 13, color: Colors.black87)),
                   const SizedBox(height: 6),
                   // ✅ Tips kualitas foto untuk user
                   Container(
@@ -306,42 +319,44 @@ class _CameraScannerViewState extends State<CameraScannerView> {
                       color: Colors.blue[50],
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Column(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('💡 Tips foto KTP yang baik:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue)),
-                        SizedBox(height: 4),
-                        Text('• KTP isi minimal 70% frame kamera', style: TextStyle(fontSize: 11, color: Colors.black87)),
-                        Text('• Hindari bayangan & pantulan cahaya', style: TextStyle(fontSize: 11, color: Colors.black87)),
-                        Text('• Letakkan di permukaan datar & polos', style: TextStyle(fontSize: 11, color: Colors.black87)),
-                        Text('• Pencahayaan cukup, tidak backlight', style: TextStyle(fontSize: 11, color: Colors.black87)),
+                        Text('tips_foto_ktp'.tr, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.blue)),
+                        const SizedBox(height: 4),
+                        Text('tips_1'.tr, style: const TextStyle(fontSize: 11, color: Colors.black87)),
+                        Text('tips_2'.tr, style: const TextStyle(fontSize: 11, color: Colors.black87)),
+                        Text('tips_3'.tr, style: const TextStyle(fontSize: 11, color: Colors.black87)),
+                        Text('tips_4'.tr, style: const TextStyle(fontSize: 11, color: Colors.black87)),
                       ],
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text('Silakan scan ulang, atau lanjutkan untuk mengisi data manual.', style: TextStyle(fontSize: 13, color: Colors.black54)),
+                  Text('periksa_hasil_ocr'.tr, style: const TextStyle(fontSize: 13, color: Colors.black54)),
                 ],
 
                 const SizedBox(height: 24),
 
                 // Tombol Aksi
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Get.back(result: {'path': _croppedImagePath, 'ocr_data': _ocrData});
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _isKtpValidBackend ? Colors.green : const Color(0xFF6B0D0D),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    ),
-                    child: Text(
-                      _isKtpValidBackend ? 'Gunakan Foto Ini' : 'Lanjutkan & Isi Manual',
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                // Tombol Aksi - Hanya bisa melanjutkan jika OCR valid
+                if (_isKtpValidBackend)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Get.back(result: {'path': _croppedImagePath, 'ocr_data': _ocrData});
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text(
+                        'gunakan_foto_ini'.tr,
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
                     ),
                   ),
-                ),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
@@ -352,7 +367,7 @@ class _CameraScannerViewState extends State<CameraScannerView> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       side: const BorderSide(color: Colors.black26, width: 1.5),
                     ),
-                    child: const Text('Scan Ulang', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 15)),
+                    child: Text('scan_ulang'.tr, style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 15)),
                   ),
                 ),
               ]),

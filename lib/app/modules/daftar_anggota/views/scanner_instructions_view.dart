@@ -111,7 +111,7 @@ class ScannerInstructionsView extends StatelessWidget {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF2B5E), // Pinkish red
+                    backgroundColor: const Color(0xFF6B0D0D), // Maroon
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

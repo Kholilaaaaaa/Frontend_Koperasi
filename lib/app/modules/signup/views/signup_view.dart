@@ -23,7 +23,7 @@ class SignupView extends GetView<SignupController> {
               const SizedBox(height: 24),
               
               Text(
-                'Buat Akun Baru',
+                'buat_akun_baru'.tr,
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -31,38 +31,35 @@ class SignupView extends GetView<SignupController> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Mulai perjalanan finansial Anda bersama Koperasi Simpanan Harkat.',
-                style: TextStyle(color: Colors.black54, fontSize: 14),
+              Text(
+                'mulai_perjalanan_finansial'.tr,
+                style: const TextStyle(color: Colors.black54, fontSize: 14),
               ),
               const SizedBox(height: 32),
 
-              // Full Name
-              _buildLabel('NAMA LENGKAP'),
+              _buildLabel('nama_lengkap'.tr),
               const SizedBox(height: 8),
               _buildTextField(
                 controller: controller.nameController,
-                hintText: 'Masukkan nama lengkap',
+                hintText: 'hint_nama_lengkap'.tr,
                 icon: Icons.person_outline,
               ),
               const SizedBox(height: 20),
 
-              // Email
-              _buildLabel('EMAIL ATAU TELEPON'),
+              _buildLabel('email_atau_telepon'.tr),
               const SizedBox(height: 8),
               _buildTextField(
                 controller: controller.emailOrPhoneController,
-                hintText: 'nama@email.com',
+                hintText: 'hint_email_telepon'.tr,
                 icon: Icons.mail_outline,
               ),
               const SizedBox(height: 20),
 
-              // Password
-              _buildLabel('PASSWORD'),
+              _buildLabel('password'.tr),
               const SizedBox(height: 8),
               Obx(() => _buildTextField(
                 controller: controller.passwordController,
-                hintText: '********',
+                hintText: 'hint_password'.tr,
                 icon: Icons.lock_outline,
                 isPassword: true,
                 obscureText: !controller.isPasswordVisible.value,
@@ -70,12 +67,11 @@ class SignupView extends GetView<SignupController> {
               )),
               const SizedBox(height: 20),
 
-              // Confirm Password
-              _buildLabel('KONFIRMASI PASSWORD'),
+              _buildLabel('konfirmasi_password'.tr),
               const SizedBox(height: 8),
               Obx(() => _buildTextField(
                 controller: controller.confirmPasswordController,
-                hintText: '********',
+                hintText: 'hint_password'.tr,
                 icon: Icons.lock_reset,
                 isPassword: true,
                 obscureText: !controller.isConfirmPasswordVisible.value,
@@ -103,9 +99,9 @@ class SignupView extends GetView<SignupController> {
                             valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
-                      : const Text(
-                          'Daftar Sekarang',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      : Text(
+                          'daftar_sekarang'.tr,
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                 )),
               ),
@@ -113,13 +109,13 @@ class SignupView extends GetView<SignupController> {
 
               // OR Divider
               Row(
-                children: const [
-                  Expanded(child: Divider(color: Colors.black12)),
+                children: [
+                  const Expanded(child: Divider(color: Colors.black12)),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      'ATAU DAFTAR DENGAN',
-                      style: TextStyle(
+                      'atau_daftar_dengan'.tr,
+                      style: const TextStyle(
                         fontSize: 10,
                         color: Colors.black38,
                         letterSpacing: 1.0,
@@ -135,20 +131,30 @@ class SignupView extends GetView<SignupController> {
               // Google Button
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(
+                child: OutlinedButton(
                   onPressed: controller.signupWithGoogle,
-                  icon: const Icon(Icons.g_mobiledata, color: Colors.blue, size: 32),
-                  label: const Text(
-                    'Google',
-                    style: TextStyle(color: Colors.black87, fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
                   style: OutlinedButton.styleFrom(
                     backgroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(color: Colors.black12),
+                    side: const BorderSide(color: Color(0xFFDDDDDD)),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const _GoogleLogo(size: 22),
+                      const SizedBox(width: 12),
+                      Text(
+                        'daftar_google'.tr,
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -162,9 +168,9 @@ class SignupView extends GetView<SignupController> {
                     text: TextSpan(
                       style: const TextStyle(fontSize: 14, color: Colors.black54),
                       children: [
-                        const TextSpan(text: 'Sudah punya akun? '),
+                        TextSpan(text: 'sudah_punya_akun'.tr),
                         TextSpan(
-                          text: 'Masuk',
+                          text: 'masuk'.tr,
                           style: TextStyle(color: themeColor, fontWeight: FontWeight.bold),
                         ),
                       ],
@@ -244,30 +250,17 @@ class SignupView extends GetView<SignupController> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const SizedBox(width: 16),
-              Container(
-                width: 35,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  border: Border.all(color: themeColor.withValues(alpha: 0.1)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(Icons.account_balance, color: Color(0xFF6B0D0D), size: 20),
-                ),
+              const SizedBox(width: 8),
+              Image.asset(
+                'assets/images/logo_koperasi.png',
+                width: 36,
+                height: 36,
+                fit: BoxFit.contain,
               ),
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  'KOPERASI SIMPANAN',
+                  'KOPERASI SIMPANKU',
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                   style: TextStyle(
@@ -285,4 +278,53 @@ class SignupView extends GetView<SignupController> {
       ],
     );
   }
+}
+
+// ── Google Logo Widget (4 warna asli) ─────────────────────────────────────
+class _GoogleLogo extends StatelessWidget {
+  final double size;
+  const _GoogleLogo({this.size = 24});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _GoogleLogoPainter()),
+    );
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final strokeW = size.width * 0.22;
+    final rect = Rect.fromCircle(center: center, radius: radius - strokeW / 2);
+
+    void arc(Color color, double start, double sweep) {
+      canvas.drawArc(rect, start, sweep, false,
+          Paint()..color = color..strokeWidth = strokeW..style = PaintingStyle.stroke..strokeCap = StrokeCap.butt);
+    }
+
+    const pi = 3.14159265;
+    arc(const Color(0xFFEA4335), -pi * 0.22, pi * 0.72); // Merah
+    arc(const Color(0xFFFBBC05), pi * 0.50, pi * 0.5);  // Kuning
+    arc(const Color(0xFF34A853), pi * 1.00, pi * 0.5);  // Hijau
+    arc(const Color(0xFF4285F4), pi * 1.50, pi * 0.78); // Biru
+
+    // Garis horizontal khas Google
+    canvas.drawLine(
+      Offset(center.dx, center.dy),
+      Offset(size.width - strokeW * 0.3, center.dy),
+      Paint()
+        ..color = const Color(0xFF4285F4)
+        ..strokeWidth = strokeW
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

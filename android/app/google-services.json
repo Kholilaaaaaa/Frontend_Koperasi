@@ -1,44 +1,26 @@
 {
   "project_info": {
-    "project_number": "441708388123",
-    "project_id": "koperasi-39d5f",
-    "storage_bucket": "koperasi-39d5f.firebasestorage.app"
+    "project_number": "778438585678",
+    "project_id": "simpan-ku",
+    "storage_bucket": "simpan-ku.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:441708388123:android:2de07c7e1aeb58faaa3dbe",
+        "mobilesdk_app_id": "1:778438585678:android:b01b52b7f643381eb8021f",
         "android_client_info": {
           "package_name": "com.ola.pattern_getx_cli"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "441708388123-0jnpkunsddgn8vc80lvg0oqfe9miu1ij.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.ola.pattern_getx_cli",
-            "certificate_hash": "50b5e754a4ca45e15057829064bb44f0b1d56cd0"
-          }
-        },
-        {
-          "client_id": "441708388123-harti7pngma92cde3b7lun8m96erblln.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyABECS5GJiCFB8Jx_BemqVhULwVoAFnPmY"
+          "current_key": "AIzaSyAQGkQkMek0yxBECeThuoiZcsQaXCEsXqQ"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "441708388123-72sd079hnnc5qph2bkt32t5is1438b3d.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

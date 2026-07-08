@@ -1,0 +1,48 @@
+  Widget _buildSavingTypeFilter(BuildContext context, MemberDashboardController controller) {
+    return Obx(() {
+      final selectedId = controller.rxSelectedSavingTypeId.value;
+      final savings = controller.approvedSavings;
+      
+      return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            _buildFilterChip('Semua Simpanan', null, selectedId, controller),
+            ...savings.map((saving) {
+              final typeId = saving['saving_type_id'] as int?;
+              final typeName = saving['saving_type_name']?.toString() ?? 'Simpanan';
+              return _buildFilterChip(typeName, typeId, selectedId, controller);
+            }).toList(),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _buildFilterChip(String label, int? id, int? selectedId, MemberDashboardController controller) {
+    final isSelected = id == selectedId;
+    return GestureDetector(
+      onTap: () => controller.onSavingTypeFilterChanged(id),
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? themeColor : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? themeColor : themeColor.withAlpha(50)),
+          boxShadow: isSelected ? [BoxShadow(color: themeColor.withAlpha(50), blurRadius: 6, offset: const Offset(0, 2))] : [],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black54,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Date Range Filter ─────────────────────────────────────────────────────

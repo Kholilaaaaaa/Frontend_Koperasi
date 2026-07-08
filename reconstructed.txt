@@ -1,0 +1,1055 @@
+Created At: 2026-07-04T06:40:03Z
+Completed At: 2026-07-04T06:40:22Z
+The following changes were made by the multi_replace_file_content tool to: d:\SEMESTER 6\counter\pattern_getx_cli\lib\app\modules\member_dashboard\views\tabs\growth_view.dart. If relevant, proactively run terminal commands to execute this code for the USER. Don't ask for permission.
+[diff_block_start]
+@@ -59,473 +59,578 @@
+             onRefresh: () => controller.fetchGrowthAnalytics(),
+             child: SingleChildScrollView(
+               physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
+-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+-              child: Column(
+-                crossAxisAlignment: CrossAxisAlignment.start,
+-                children: [
+-                  _buildTopBar(context),
+-                  const SizedBox(height: 28),
+-                  _buildHeaderTitle(context),
+-                  const SizedBox(height: 20),
+-                  _buildFilterSection(context, controller),
+-                  const SizedBox(height: 20),
+-                  if (data != null) ...[
+-                    // Section 1: Saving Health Score (pertumbuhan simpanan member)
+-                    if (!data.health.status.contains('Not Applicable') && !data.health.status.contains('N/A')) ...[
+-                      _buildHealthScoreCard(context, data.health),
+-                      const SizedBox(height: 16),
+-                    ],
+-                    // Section 2: Savings Chart
+-                    _buildMainChartCard(context, data.savingTrend),
+-                    const SizedBox(height: 16),
+-                    // Section 3: Economic Health Score (kondisi ekonomi vs member)
+-                    if (!data.economicHealth.status.contains('Not Applicable') && !data.economicHealth.status.contains('N/A')) ...[
+-                      _buildEconomicHealthCard(context, data.economicHealth),
+-                      const SizedBox(height: 16),
+-                    ],
+-                    // Section 4: 4 KPI cards (semua indikator ekonomi)
+-                    _buildEconomicKpiRow(context, data.economicSummary),
+-                    const SizedBox(height: 16),
+-                    // Section 5: Grafik ekonomi dengan tab selector
+-                    _buildEconomicChartCard(context, data.economicData),
+-                    const SizedBox(height: 16),
+-                    // Section 6: AI Insights per member
+-                    ...data.aiInsights.map((insight) => Padding(
+-                      padding: const EdgeInsets.only(bottom: 12),
+-                      child: _buildAIInsightCard(context, insight),
+-                    )),
+-                    const SizedBox(height: 8),
+-                    // Section 7: Prediction
+-                    _buildPredictionCard(context, data.prediction,
+-                        hasSavings: data.savingTrend.totalBalance > 0),
+-                  ] else ...[
+-                    _buildErrorCard(context, controller.growthError.value),
+-                  ],
+-                  const SizedBox(height: 100),
+-                ],
+-              ),
+-            ),
+-          );
+-        }),
+-      ),
+-    );
+-  }
+-
+-  Widget _buildTopBar(BuildContext context) {
+-    return Row(
+-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+-      children: [
+-        Row(
+-          children: [
+-            Container(
+-              width: 40, height: 40,
+-              decoration: BoxDecoration(
+-                shape: BoxShape.circle, color: Colors.white,
+-                border: Border.all(color: themeColor.withValues(alpha: 0.1)),
+-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
+-              ),
+-              child: const Center(child: Icon(Icons.account_balance, color: themeColor, size: 20)),
+-            ),
+-            const SizedBox(width: 12),
+-            const Text('KOPERASI SIMPANAN HARKAT',
+-                style: TextStyle(color: themeColor, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.0)),
+-          ],
+-        ),
+-        Obx(() => GestureDetector(
+-          onTap: () async {
+-            await Get.toNamed(Routes.NOTIFIKASI);
+-            controller.fetchUnreadNotificationCount();
+-          },
+-          child: Stack(
+-            clipBehavior: Clip.none,
+-            children: [
+-              Container(
+-                padding: const EdgeInsets.all(8),
+-                decoration: BoxDecoration(color: themeColor.withValues(alpha: 0.1), shape: BoxShape.circle),
+-                child: const Icon(Icons.notifications_none_outlined, color: themeColor, size: 24),
+-              ),
+-              if (controller.unreadNotificationCount.value > 0)
+-                Positioned(
+-                  right: -2, top: -2,
+-                  child: Container(
+-                    padding: const EdgeInsets.all(4),
+-                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+-                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+-                    child: Center(
+-                      child: Text(
+-                        '${controller.unreadNotificationCount.value}',
+-                        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+-                      ),
+-                    ),
+-                  ),
+-                ),
+-            ],
+-          ),
+-        )),
+-      ],
+-    );
+-  }
+-
+-  Widget _buildHeaderTitle(BuildContext context) {
+-    return Column(
+-      crossAxisAlignment: CrossAxisAlignment.start,
+-      children: [
+-        const Text('GROWTH ANALYTICS',
+-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black38, letterSpacing: 1.5)),
+-        Text('Analisis Pertumbuhan',
+-            style: TextStyle(
+-              fontSize: 26, fontWeight: FontWeight.w900,
+-              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : themeColor,
+-            )),
+-      ],
+-    );
+-  }
+-
+-  // ── Date Range Filter ─────────────────────────────────────────────────────
+-  Widget _buildFilterSection(BuildContext context, MemberDashboardController controller) {
+-    final fmt = DateFormat('dd MMM yyyy');
+-    return Obx(() {
+-      final start = controller.startDate.value ?? (controller.rxDateJoined.value ?? DateTime(DateTime.now().year, 1, 1));
+-      final end   = controller.endDate.value   ?? DateTime.now();
+-
+-      return Container(
+-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+-        decoration: BoxDecoration(
+-          color: Colors.white,
+-          borderRadius: BorderRadius.circular(16),
+-          boxShadow: [BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10)],
+-        ),
+-        child: Row(
+-          children: [
+-            const Icon(Icons.calendar_today_rounded, color: themeColor, size: 16),
+-            const SizedBox(width: 8),
+-            // Start date button
+-            Expanded(
+-              child: GestureDetector(
+-                onTap: () => _pickDate(context, isStart: true),
+-                child: Container(
+-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+-                  decoration: BoxDecoration(
+-                    border: Border.all(color: themeColor.withValues(alpha: 0.3)),
+-                    borderRadius: BorderRadius.circular(10),
+-                    color: themeColor.withValues(alpha: 0.04),
+-                  ),
+-                  child: Column(
+-                    crossAxisAlignment: CrossAxisAlignment.start,
+-                    children: [
+-                      const Text('Dari', style: TextStyle(fontSize: 8, color: Colors.black38, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+-                      const SizedBox(height: 2),
+-                      Text(fmt.format(start), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: themeColor)),
+-                    ],
+-                  ),
+-                ),
+-              ),
+-            ),
+-            Padding(
+-              padding: const EdgeInsets.symmetric(horizontal: 6),
+-              child: Text('—', style: TextStyle(color: Colors.black26, fontWeight: FontWeight.bold)),
+-            ),
+-            // End date button
+-            Expanded(
+-              child: GestureDetector(
+-                onTap: () => _pickDate(context, isStart: false),
+-                child: Container(
+-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+-                  decoration: BoxDecoration(
+-                    border: Border.all(color: themeColor.withValues(alpha: 0.3)),
+-                    borderRadius: BorderRadius.circular(10),
+-                    color: themeColor.withValues(alpha: 0.04),
+-                  ),
+-                  child: Column(
+-                    crossAxisAlignment: CrossAxisAlignment.start,
+-                    children: [
+-                      const Text('s/d', style: TextStyle(fontSize: 8, color: Colors.black38, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+-                      const SizedBox(height: 2),
+-                      Text(fmt.format(end), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: themeColor)),
+-                    ],
+-                  ),
+-                ),
+-              ),
+-            ),
+-            const SizedBox(width: 8),
+-            // Apply button
+-            GestureDetector(
+-              onTap: () => controller.setDateRange(
+-                controller.startDate.value ?? DateTime(DateTime.now().year, 1, 1),
+-                controller.endDate.value   ?? DateTime.now(),
+-              ),
+-              child: Container(
+-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+-                decoration: BoxDecoration(
+-                  color: themeColor,
+-                  borderRadius: BorderRadius.circular(10),
+-                ),
+-                child: const Text('Filter', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12)),
+-              ),
+-            ),
+-          ],
+-        ),
+-      );
+-    });
+-  }
+-
+-  Future<void> _pickDate(BuildContext context, {required bool isStart}) async {
+-    final now = DateTime.now();
+-    // Gunakan tanggal bergabung sebagai batas minimum untuk startDate
+-    final joinDate = controller.rxDateJoined.value;
+-    final absoluteFirst = DateTime(2020, 1, 1);
+-    // firstDate untuk startDate: tanggal bergabung jika ada, jika tidak 2020-01-01
+-    final first = isStart
+-        ? (joinDate ?? absoluteFirst)
+-        : (controller.startDate.value ?? absoluteFirst);
+-    final last  = isStart ? (controller.endDate.value ?? now) : now;
+-    final initialRaw = isStart
+-        ? (controller.startDate.value ?? DateTime(now.year, 1, 1))
+-        : (controller.endDate.value   ?? now);
+-    
+-    DateTime safeInitial = initialRaw;
+-    if (safeInitial.isBefore(first)) safeInitial = first;
+-    if (safeInitial.isAfter(last)) safeInitial = last;
+-
+-    final picked = await showDatePicker(
+-      context: context,
+-      initialDate: safeInitial,
+-      firstDate: first,
+-      lastDate: last,
+-      builder: (ctx, child) => Theme(
+-        data: Theme.of(ctx).copyWith(
+-          colorScheme: const ColorScheme.light(
+-            primary: themeColor,
+-            onPrimary: Colors.white,
+-            surface: Colors.white,
+-            onSurface: Colors.black87,
+-          ),
+-        ),
+-        child: child!,
+-      ),
+-    );
+-
+-    if (picked != null) {
+-      if (isStart) {
+-        // Periksa sekali lagi — jika sebelum tanggal bergabung, tampilkan SnackBar
+-        if (joinDate != null && picked.isBefore(joinDate)) {
+-          if (context.mounted) {
+-            ScaffoldMessenger.of(context).showSnackBar(
+-              SnackBar(
+-                content: Row(
+-                  children: [
+-                    const Icon(Icons.warning_amber_rounded, color: Colors.white),
+-                    const SizedBox(width: 10),
+-                    Expanded(child: Text(
+-                      'Tanggal mulai tidak boleh sebelum Anda bergabung (${joinDate.day.toString().padLeft(2,'0')} ${_bulanId(joinDate.month)} ${joinDate.year}).',
+-                      style: const TextStyle(fontSize: 13),
+-                    )),
+-                  ],
+-                ),
+-                backgroundColor: Colors.red.shade700,
+-                duration: const Duration(seconds: 4),
+-                behavior: SnackBarBehavior.floating,
+-                margin: const EdgeInsets.all(12),
+-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+-              ),
+-            );
+-          }
+-          return;
+-        }
+-        controller.startDate.value = picked;
+-        // Jika startDate melewati endDate, reset endDate ke hari ini
+-        if (controller.endDate.value != null && picked.isAfter(controller.endDate.value!)) {
+-          controller.endDate.value = now;
+-        }
+-      } else {
+-        controller.endDate.value = picked;
+-      }
+-    }
+-  }
+-
+-  /// Helper: nama bulan dalam Bahasa Indonesia
+-  String _bulanId(int month) {
+-    const names = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+-    if (month >= 1 && month <= 12) return names[month - 1];
+-    return '';
+-  }
+-
+-  // ── Savings Growth Health Score ──────────────────────────────────────────
+-  Widget _buildHealthScoreCard(BuildContext context, HealthScore health) {
+-    Color statusColor;
+-    if (health.status.contains('Not Applicable') || health.status.contains('N/A')) {
+-      statusColor = Colors.grey;
+-    } else if (health.score >= 80) {
+-      statusColor = successColor;
+-    } else if (health.score >= 60) {
+-      statusColor = warningColor;
+-    } else {
+-      statusColor = Colors.red;
+-    }
+-
+-    return Container(
+-      padding: const EdgeInsets.all(20),
+-      decoration: BoxDecoration(
+-        gradient: LinearGradient(
+-            colors: [themeColor, themeColor.withValues(alpha: 0.75)],
+-            begin: Alignment.topLeft, end: Alignment.bottomRight),
+-        borderRadius: BorderRadius.circular(20),
+-        boxShadow: [BoxShadow(color: themeColor.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
+-      ),
+-      child: Row(
+-        children: [
+-          SizedBox(
+-            width: 72, height: 72,
+-            child: Stack(
+-              alignment: Alignment.center,
+-              children: [
+-                SizedBox(
+-                  width: 72, height: 72,
+-                  child: CircularProgressIndicator(
+-                    value: health.score / 100,
+-                    strokeWidth: 6,
+-                    backgroundColor: Colors.white.withValues(alpha: 0.2),
+-                    valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+-                  ),
+-                ),
+-                Text('${health.score}',
+-                    style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
+-              ],
+-            ),
+-          ),
+-          const SizedBox(width: 20),
+-          Expanded(
+-            child: Column(
+-              crossAxisAlignment: CrossAxisAlignment.start,
+-              children: [
+-                const Text('SIMPANAN HEALTH SCORE',
+-                    style: TextStyle(color: Colors.white70, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+-                const SizedBox(height: 4),
+-                Text(health.status,
+-                    style: TextStyle(color: statusColor, fontSize: 18, fontWeight: FontWeight.w900)),
+-                const SizedBox(height: 4),
+-                const Text('Berdasarkan pertumbuhan & stabilitas simpanan Anda',
+-                    style: TextStyle(color: Colors.white60, fontSize: 11)),
+-              ],
+-            ),
+-          ),
+-        ],
+-      ),
+-    );
+-  }
+-
+-  // ── Savings Trend Chart ──────────────────────────────────────────────────
+-  Widget _buildMainChartCard(BuildContext context, SavingTrendData trend) {
+-    if (trend.totalBalance <= 0) {
+-      return _buildSectionCard(
+-        context,
+-        title: 'TREND PERTUMBUHAN SIMPANAN',
+-        subtitle: 'Riwayat Saldo Anda',
+-        child: Container(
+-          padding: const EdgeInsets.symmetric(vertical: 40),
+-          alignment: Alignment.center,
+-          child: Column(
+-            children: [
+-              Icon(Icons.savings_outlined, size: 56, color: Colors.grey.withValues(alpha: 0.3)),
+-              const SizedBox(height: 12),
+-              const Text('Belum Ada Riwayat Simpanan',
+-                  style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold)),
+-              const SizedBox(height: 6),
+-              const Text('Grafik akan muncul setelah Anda mulai menabung.',
+-                  textAlign: TextAlign.center,
+-                  style: TextStyle(color: Colors.black38, fontSize: 12)),
+-            ],
+-          ),
+-        ),
+-      );
+-    }
+-
+-    final balanceSpots = <FlSpot>[];
+-    final depositSpots = <FlSpot>[];
+-    final withdrawalSpots = <FlSpot>[];
+-    
+-    for (int i = 0; i < trend.values.length; i++) {
+-      balanceSpots.add(FlSpot(i.toDouble(), trend.values[i]));
+-      if (i < trend.depositData.length) {
+-        depositSpots.add(FlSpot(i.toDouble(), trend.depositData[i]));
+-      }
+-      if (i < trend.withdrawalData.length) {
+-        withdrawalSpots.add(FlSpot(i.toDouble(), trend.withdrawalData[i]));
+-      }
+-    }
+-
+-    final isPositive = trend.growthPct >= 0;
+-    final growthColor = isPositive ? successColor : Colors.red;
+-
+-    double minY = 0;
+-    double maxY = 10;
+-    double interval = 2;
+-    
+-    // Find min and max across all 3 lists
+-    final allVals = [...trend.values, ...trend.depositData, ...trend.withdrawalData];
+-    final nonZeroVals = allVals.where((v) => v > 0).toList();
+-    if (nonZeroVals.isNotEmpty) {
+-      final minVal = nonZeroVals.reduce((a, b) => a < b ? a : b);
+-      final maxVal = nonZeroVals.reduce((a, b) => a > b ? a : b);
+-      double diff = maxVal - minVal;
+-      if (diff == 0) {
+-        minY = minVal * 0.9;
+-        maxY = minVal * 1.1;
+-      } else {
+-        minY = minVal - (diff * 0.15);
+-        maxY = maxVal + (diff * 0.15);
+-      }
+-      if (minY < 0) minY = 0;
+-      diff = maxY - minY;
+-      if (diff <= 0) diff = 10;
+-      interval = diff / 4;
+-    }
+-
+-    return _buildSectionCard(
+-      context,
+-      title: 'TREND PERTUMBUHAN SIMPANAN',
+-      subtitle: 'Riwayat Pemasukan & Pengeluaran',
+-      child: Column(
+-        children: [
+-          SizedBox(
+-            height: 180,
+-            child: balanceSpots.isEmpty
+-                ? const Center(child: Text('Belum ada data transaksi', style: TextStyle(color: Colors.black38)))
+-                : LineChart(
+-                    LineChartData(
+-                      minY: minY,
+-                      maxY: maxY,
+-                      gridData: FlGridData(
+-                        show: true,
+-                        drawVerticalLine: false,
+-                        horizontalInterval: interval,
+-                        getDrawingHorizontalLine: (v) =>
+-                            FlLine(color: Colors.black.withAlpha(12), strokeWidth: 1),
+-                      ),
+-                      titlesData: FlTitlesData(
+-                        bottomTitles: AxisTitles(sideTitles: SideTitles(
+-                          showTitles: true,
+-                          interval: 1.0,
+-                          getTitlesWidget: (value, meta) {
+-                            final idx = value.toInt();
+-                            if (idx >= 0 && idx < trend.months.length) {
+-                              return Padding(
+-                                padding: const EdgeInsets.only(top: 4),
+-                                child: Text(trend.months[idx],
+-                                    style: const TextStyle(color: Colors.black38, fontSize: 9)),
+-                              );
+-                            }
+-                            return const Text('');
+-                          },
+-                          reservedSize: 24,
+-                        )),
+-                        leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+-                        topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+-                        rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+-                      ),
+-                      borderData: FlBorderData(show: false),
+-                      lineBarsData: [
+-                        // Pemasukan (Deposit)
++import 'package:flutter/material.dart';
++import 'package:get/get.dart';
++import 'package:fl_chart/fl_chart.dart';
++import 'package:intl/intl.dart';
++import '../../controllers/member_dashboard_controller.dart';
++import '../../../../routes/app_routes.dart';
++import '../../../../data/models/growth_analytics_model.dart';
++
++class GrowthView extends StatefulWidget {
++  const GrowthView({super.key});
++
++  @override
++  State<GrowthView> createState() => _GrowthViewState();
++}
++
++class _GrowthViewState extends State<GrowthView> with SingleTickerProviderStateMixin {
++  MemberDashboardController get controller => Get.find<MemberDashboardController>();
++
++  static const themeColor = Color(0xFF6B0D0D);
++  static const Color successColor = Color(0xFF10B981);
++  static const Color warningColor = Color(0xFFF59E0B);
++  static const Color infoColor = Color(0xFF3B82F6);
++  static const Color inflationColor = Color(0xFFEF4444);
++  static const Color birateColor = Color(0xFF6B0D0D);
++  static const Color jisdorColor = Color(0xFF10B981);
++  static const Color foodColor = Color(0xFFF97316);
++
++  static Color getBgColor(BuildContext context) =>
++      Theme.of(context).brightness == Brightness.dark
++          ? const Color(0xFF1A1A1A)
++          : const Color(0xFFF8F4F0);
++
++  // Active economic indicator tab: 0=Inflasi, 1=BI Rate, 2=JISDOR, 3=Harga Pangan
++  int _activeEcoTab = 0;
++
++  @override
++  Widget build(BuildContext context) {
++    return Scaffold(
++      backgroundColor: getBgColor(context),
++      body: SafeArea(
++        child: Obx(() {
++          if (controller.isLoadingGrowth.value) {
++            return const Center(
++              child: Column(
++                mainAxisAlignment: MainAxisAlignment.center,
++                children: [
++                  CircularProgressIndicator(color: themeColor),
++                  SizedBox(height: 16),
++                  Text('Memuat data analytics...', style: TextStyle(color: Colors.black54)),
++                ],
++              ),
++            );
++          }
++
++          final data = controller.growthData.value;
++
++          return RefreshIndicator(
++            color: themeColor,
++            onRefresh: () => controller.fetchGrowthAnalytics(),
++            child: SingleChildScrollView(
++              physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
++              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
++              child: Column(
++                crossAxisAlignment: CrossAxisAlignment.start,
++                children: [
++                  _buildTopBar(context),
++                  const SizedBox(height: 28),
++                  _buildHeaderTitle(context),
++                  const SizedBox(height: 20),
++                  _buildSavingTypeFilter(context, controller),
++                  const SizedBox(height: 16),
++                  _buildFilterSection(context, controller),
++                  const SizedBox(height: 20),
++                  if (data != null) ...[
++                    // Section 1: Saving Health Score (pertumbuhan simpanan member)
++                    if (!data.health.status.contains('Not Applicable') && !data.health.status.contains('N/A')) ...[
++                      _buildHealthScoreCard(context, data.health),
++                      const SizedBox(height: 16),
++                    ],
++                    // Section 2: Savings Chart
++                    _buildMainChartCard(context, data.savingTrend),
++                    const SizedBox(height: 16),
++                    // Section 3: Economic Health Score (kondisi ekonomi vs member)
++                    if (!data.economicHealth.status.contains('Not Applicable') && !data.economicHealth.status.contains('N/A')) ...[
++                      _buildEconomicHealthCard(context, data.economicHealth),
++                      const SizedBox(height: 16),
++                    ],
++                    // Section 4: 4 KPI cards (semua indikator ekonomi)
++                    _buildEconomicKpiRow(context, data.economicSummary),
++                    const SizedBox(height: 16),
++                    // Section 5: Grafik ekonomi dengan tab selector
++                    _buildEconomicChartCard(context, data.economicData),
++                    const SizedBox(height: 16),
++                    // Section 6: AI Insights per member
++                    ...data.aiInsights.map((insight) => Padding(
++                      padding: const EdgeInsets.only(bottom: 12),
++                      child: _buildAIInsightCard(context, insight),
++                    )),
++                    const SizedBox(height: 8),
++                    // Section 7: Prediction
++                    _buildPredictionCard(context, data.prediction,
++                        hasSavings: data.savingTrend.totalBalance > 0),
++                  ] else ...[
++                    _buildErrorCard(context, controller.growthError.value),
++                  ],
++                  const SizedBox(height: 100),
++                ],
++              ),
++            ),
++          );
++        }),
++      ),
++    );
++  }
++
++  Widget _buildTopBar(BuildContext context) {
++    return Row(
++      mainAxisAlignment: MainAxisAlignment.spaceBetween,
++      children: [
++        Row(
++          children: [
++            Container(
++              width: 40, height: 40,
++              decoration: BoxDecoration(
++                shape: BoxShape.circle, color: Colors.white,
++                border: Border.all(color: themeColor.withValues(alpha: 0.1)),
++                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4))],
++              ),
++              child: const Center(child: Icon(Icons.account_balance, color: themeColor, size: 20)),
++            ),
++            const SizedBox(width: 12),
++            const Text('KOPERASI SIMPANAN HARKAT',
++                style: TextStyle(color: themeColor, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 1.0)),
++          ],
++        ),
++        Obx(() => GestureDetector(
++          onTap: () async {
++            await Get.toNamed(Routes.NOTIFIKASI);
++            controller.fetchUnreadNotificationCount();
++          },
++          child: Stack(
++            clipBehavior: Clip.none,
++            children: [
++              Container(
++                padding: const EdgeInsets.all(8),
++                decoration: BoxDecoration(color: themeColor.withValues(alpha: 0.1), shape: BoxShape.circle),
++                child: const Icon(Icons.notifications_none_outlined, color: themeColor, size: 24),
++              ),
++              if (controller.unreadNotificationCount.value > 0)
++                Positioned(
++                  right: -2, top: -2,
++                  child: Container(
++                    padding: const EdgeInsets.all(4),
++                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
++                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
++                    child: Center(
++                      child: Text(
++                        '${controller.unreadNotificationCount.value}',
++                        style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
++                      ),
++                    ),
++                  ),
++                ),
++            ],
++          ),
++        )),
++      ],
++    );
++  }
++
++  Widget _buildHeaderTitle(BuildContext context) {
++    return Column(
++      crossAxisAlignment: CrossAxisAlignment.start,
++      children: [
++        const Text('GROWTH ANALYTICS',
++            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black38, letterSpacing: 1.5)),
++        Text('Analisis Pertumbuhan',
++            style: TextStyle(
++              fontSize: 26, fontWeight: FontWeight.w900,
++              color: Theme.of(context).brightness == Brightness.dark ? Colors.white : themeColor,
++            )),
++      ],
++    );
++  }
++
++  Widget _buildSavingTypeFilter(BuildContext context, MemberDashboardController controller) {
++    return Obx(() {
++      final selectedId = controller.rxSelectedSavingTypeId.value;
++      final savings = controller.approvedSavings;
++      
++      return SingleChildScrollView(
++        scrollDirection: Axis.horizontal,
++        physics: const BouncingScrollPhysics(),
++        child: Row(
++          children: [
++            _buildFilterChip('Semua Simpanan', null, selectedId, controller),
++            ...savings.map((saving) {
++              final typeId = saving['saving_type_id'] as int?;
++              final typeName = saving['saving_type_name']?.toString() ?? 'Simpanan';
++              return _buildFilterChip(typeName, typeId, selectedId, controller);
++            }).toList(),
++          ],
++        ),
++      );
++    });
++  }
++
++  Widget _buildFilterChip(String label, int? id, int? selectedId, MemberDashboardController controller) {
++    final isSelected = id == selectedId;
++    return GestureDetector(
++      onTap: () => controller.onSavingTypeFilterChanged(id),
++      child: Container(
++        margin: const EdgeInsets.only(right: 8),
++        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
++        decoration: BoxDecoration(
++          color: isSelected ? themeColor : Colors.white,
++          borderRadius: BorderRadius.circular(20),
++          border: Border.all(color: isSelected ? themeColor : themeColor.withAlpha(50)),
++          boxShadow: isSelected ? [BoxShadow(color: themeColor.withAlpha(50), blurRadius: 6, offset: const Offset(0, 2))] : [],
++        ),
++        child: Text(
++          label,
++          style: TextStyle(
++            color: isSelected ? Colors.white : Colors.black54,
++            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
++            fontSize: 12,
++          ),
++        ),
++      ),
++    );
++  }
++
++  // ── Date Range Filter ─────────────────────────────────────────────────────
++  Widget _buildFilterSection(BuildContext context, MemberDashboardController controller) {
++    final fmt = DateFormat('dd MMM yyyy');
++    return Obx(() {
++      final start = controller.startDate.value ?? (controller.rxDateJoined.value ?? DateTime(DateTime.now().year, 1, 1));
++      final end   = controller.endDate.value   ?? DateTime.now();
++
++      return Container(
++        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
++        decoration: BoxDecoration(
++          color: Colors.white,
++          borderRadius: BorderRadius.circular(16),
++          boxShadow: [BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10)],
++        ),
++        child: Row(
++          children: [
++            const Icon(Icons.calendar_today_rounded, color: themeColor, size: 16),
++            const SizedBox(width: 8),
++            // Start date button
++            Expanded(
++              child: GestureDetector(
++                onTap: () => _pickDate(context, isStart: true),
++                child: Container(
++                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
++                  decoration: BoxDecoration(
++                    border: Border.all(color: themeColor.withValues(alpha: 0.3)),
++                    borderRadius: BorderRadius.circular(10),
++                    color: themeColor.withValues(alpha: 0.04),
++                  ),
++                  child: Column(
++                    crossAxisAlignment: CrossAxisAlignment.start,
++                    children: [
++                      const Text('Dari', style: TextStyle(fontSize: 8, color: Colors.black38, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
++                      const SizedBox(height: 2),
++                      Text(fmt.format(start), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: themeColor)),
++                    ],
++                  ),
++                ),
++              ),
++            ),
++            Padding(
++              padding: const EdgeInsets.symmetric(horizontal: 6),
++              child: Text('—', style: TextStyle(color: Colors.black26, fontWeight: FontWeight.bold)),
++            ),
++            // End date button
++            Expanded(
++              child: GestureDetector(
++                onTap: () => _pickDate(context, isStart: false),
++                child: Container(
++                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
++                  decoration: BoxDecoration(
++                    border: Border.all(color: themeColor.withValues(alpha: 0.3)),
++                    borderRadius: BorderRadius.circular(10),
++                    color: themeColor.withValues(alpha: 0.04),
++                  ),
++                  child: Column(
++                    crossAxisAlignment: CrossAxisAlignment.start,
++                    children: [
++                      const Text('s/d', style: TextStyle(fontSize: 8, color: Colors.black38, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
++                      const SizedBox(height: 2),
++                      Text(fmt.format(end), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: themeColor)),
++                    ],
++                  ),
++                ),
++              ),
++            ),
++            const SizedBox(width: 8),
++            // Apply button
++            GestureDetector(
++              onTap: () => controller.setDateRange(
++                controller.startDate.value ?? DateTime(DateTime.now().year, 1, 1),
++                controller.endDate.value   ?? DateTime.now(),
++              ),
++              child: Container(
++                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
++                decoration: BoxDecoration(
++                  color: themeColor,
++                  borderRadius: BorderRadius.circular(10),
++                ),
++                child: const Text('Filter', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12)),
++              ),
++            ),
++          ],
++        ),
++      );
++    });
++  }
++
++  Future<void> _pickDate(BuildContext context, {required bool isStart}) async {
++    final now = DateTime.now();
++    // Gunakan tanggal bergabung sebagai batas minimum untuk startDate
++    final joinDate = controller.rxDateJoined.value;
++    final absoluteFirst = DateTime(2020, 1, 1);
++    // firstDate untuk startDate: tanggal bergabung jika ada, jika tidak 2020-01-01
++    final first = isStart
++        ? (joinDate ?? absoluteFirst)
++        : (controller.startDate.value ?? absoluteFirst);
++    final last  = isStart ? (controller.endDate.value ?? now) : now;
++    final initialRaw = isStart
++        ? (controller.startDate.value ?? DateTime(now.year, 1, 1))
++        : (controller.endDate.value   ?? now);
++    
++    DateTime safeInitial = initialRaw;
++    if (safeInitial.isBefore(first)) safeInitial = first;
++    if (safeInitial.isAfter(last)) safeInitial = last;
++
++    final picked = await showDatePicker(
++      context: context,
++      initialDate: safeInitial,
++      firstDate: first,
++      lastDate: last,
++      builder: (ctx, child) => Theme(
++        data: Theme.of(ctx).copyWith(
++          colorScheme: const ColorScheme.light(
++            primary: themeColor,
++            onPrimary: Colors.white,
++            surface: Colors.white,
++            onSurface: Colors.black87,
++          ),
++        ),
++        child: child!,
++      ),
++    );
++
++    if (picked != null) {
++      if (isStart) {
++        // Periksa sekali lagi — jika sebelum tanggal bergabung, tampilkan SnackBar
++        if (joinDate != null && picked.isBefore(joinDate)) {
++          if (context.mounted) {
++            ScaffoldMessenger.of(context).showSnackBar(
++              SnackBar(
++                content: Row(
++                  children: [
++                    const Icon(Icons.warning_amber_rounded, color: Colors.white),
++                    const SizedBox(width: 10),
++                    Expanded(child: Text(
++                      'Tanggal mulai tidak boleh sebelum Anda bergabung (${joinDate.day.toString().padLeft(2,'0')} ${_bulanId(joinDate.month)} ${joinDate.year}).',
++                      style: const TextStyle(fontSize: 13),
++                    )),
++                  ],
++                ),
++                backgroundColor: Colors.red.shade700,
++                duration: const Duration(seconds: 4),
++                behavior: SnackBarBehavior.floating,
++                margin: const EdgeInsets.all(12),
++                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
++              ),
++            );
++          }
++          return;
++        }
++        controller.startDate.value = picked;
++        // Jika startDate melewati endDate, reset endDate ke hari ini
++        if (controller.endDate.value != null && picked.isAfter(controller.endDate.value!)) {
++          controller.endDate.value = now;
++        }
++      } else {
++        controller.endDate.value = picked;
++      }
++    }
++  }
++
++  /// Helper: nama bulan dalam Bahasa Indonesia
++  String _bulanId(int month) {
++    const names = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
++    if (month >= 1 && month <= 12) return names[month - 1];
++    return '';
++  }
++
++  // ── Savings Growth Health Score ──────────────────────────────────────────
++  Widget _buildHealthScoreCard(BuildContext context, HealthScore health) {
++    Color statusColor;
++    if (health.status.contains('Not Applicable') || health.status.contains('N/A')) {
++      statusColor = Colors.grey;
++    } else if (health.score >= 80) {
++      statusColor = successColor;
++    } else if (health.score >= 60) {
++      statusColor = warningColor;
++    } else {
++      statusColor = Colors.red;
++    }
++
++    return Container(
++      padding: const EdgeInsets.all(20),
++      decoration: BoxDecoration(
++        gradient: LinearGradient(
++            colors: [themeColor, themeColor.withValues(alpha: 0.75)],
++            begin: Alignment.topLeft, end: Alignment.bottomRight),
++        borderRadius: BorderRadius.circular(20),
++        boxShadow: [BoxShadow(color: themeColor.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
++      ),
++      child: Row(
++        children: [
++          SizedBox(
++            width: 72, height: 72,
++            child: Stack(
++              alignment: Alignment.center,
++              children: [
++                SizedBox(
++                  width: 72, height: 72,
++                  child: CircularProgressIndicator(
++                    value: health.score / 100,
++                    strokeWidth: 6,
++                    backgroundColor: Colors.white.withValues(alpha: 0.2),
++                    valueColor: AlwaysStoppedAnimation<Color>(statusColor),
++                  ),
++                ),
++                Text('${health.score}',
++                    style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900)),
++              ],
++            ),
++          ),
++          const SizedBox(width: 20),
++          Expanded(
++            child: Column(
++              crossAxisAlignment: CrossAxisAlignment.start,
++              children: [
++                const Text('SIMPANAN HEALTH SCORE',
++                    style: TextStyle(color: Colors.white70, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
++                const SizedBox(height: 4),
++                Text(health.status,
++                    style: TextStyle(color: statusColor, fontSize: 18, fontWeight: FontWeight.w900)),
++                const SizedBox(height: 4),
++                const Text('Berdasarkan pertumbuhan & stabilitas simpanan Anda',
++                    style: TextStyle(color: Colors.white60, fontSize: 11)),
++              ],
++            ),
++          ),
++        ],
++      ),
++    );
++  }
++
++  // ── Savings Trend Chart ──────────────────────────────────────────────────
++  Widget _buildMainChartCard(BuildContext context, SavingTrendData trend) {
++    if (trend.totalBalance <= 0) {
++      return _buildSectionCard(
++        context,
++        title: 'TREND PERTUMBUHAN SIMPANAN',
++        subtitle: 'Riwayat Saldo Anda',
++        child: Container(
++          padding: const EdgeInsets.symmetric(vertical: 40),
++          alignment: Alignment.center,
++          child: Column(
++            children: [
++              Icon(Icons.savings_outlined, size: 56, color: Colors.grey.withValues(alpha: 0.3)),
++              const SizedBox(height: 12),
++              const Text('Belum Ada Riwayat Simpanan',
++                  style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold)),
++              const SizedBox(height: 6),
++              const Text('Grafik akan muncul setelah Anda mulai menabung.',
++                  textAlign: TextAlign.center,
++                  style: TextStyle(color: Colors.black38, fontSize: 12)),
++            ],
++          ),
++        ),
++      );
++    }
++
++    final balanceSpots = <FlSpot>[];
++    final depositSpots = <FlSpot>[];
++    final withdrawalSpots = <FlSpot>[];
++    
++    for (int i = 0; i < trend.values.length; i++) {
++      balanceSpots.add(FlSpot(i.toDouble(), trend.values[i]));
++      if (i < trend.depositData.length) {
++        depositSpots.add(FlSpot(i.toDouble(), trend.depositData[i]));
++      }
++      if (i < trend.withdrawalData.length) {
++        withdrawalSpots.add(FlSpot(i.toDouble(), trend.withdrawalData[i]));
++      }
++    }
++
++    final isPositive = trend.growthPct >= 0;
++    final growthColor = isPositive ? successColor : Colors.red;
++
++    double minY = 0;
++    double maxY = 10;
++    double interval = 2;
++    
++    // Find min and max across all 3 lists
++    final allVals = [...trend.values, ...trend.depositData, ...trend.withdrawalData];
++    final nonZeroVals = allVals.where((v) => v > 0).toList();
++    if (nonZeroVals.isNotEmpty) {
++      final minVal = nonZeroVals.reduce((a, b) => a < b ? a : b);
++      final maxVal = nonZeroVals.reduce((a, b) => a > b ? a : b);
++      double diff = maxVal - minVal;
++      if (diff == 0) {
++        minY = minVal * 0.9;
++        maxY = minVal * 1.1;
++      } else {
++        minY = minVal - (diff * 0.15);
++        maxY = maxVal + (diff * 0.15);
++      }
++      if (minY < 0) minY = 0;
++      diff = maxY - minY;
++      if (diff <= 0) diff = 10;
++      interval = diff / 4;
++    }
++
++    return _buildSectionCard(
++      context,
++      title: 'TREND PERTUMBUHAN SIMPANAN',
++      subtitle: 'Riwayat Pemasukan & Pengeluaran',
++      child: Column(
++        children: [
++          SizedBox(
++            height: 180,
++            child: balanceSpots.isEmpty
++                ? const Center(child: Text('Belum ada data transaksi', style: TextStyle(color: Colors.black38)))
++                : LineChart(
++                    LineChartData(
++                      minY: minY,
++                      maxY: maxY,
++                      lineTouchData: LineTouchData(
++                        touchTooltipData: LineTouchTooltipData(
++                          tooltipBgColor: const Color(0xFF2E2E2E),
++                          tooltipRoundedRadius: 8,
++                          getTooltipItems: (touchedSpots) {
++                            return touchedSpots.map((spot) {
++                              final idx = spot.x.toInt();
++                              String dateLabel = (idx >= 0 && idx < trend.months.length) ? trend.months[idx] : '';
++                              
++                              double val = spot.y;
++                              final fmt = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
++
++                              return LineTooltipItem(
++                                '$dateLabel\n',
++                                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
++                                children: [
++                                  TextSpan(
++                                    text: '${spot.barIndex == 0 ? "Pemasukan: " : spot.barIndex == 1 ? "Pengeluaran: " : "Saldo: "}${fmt.format(val)}',
++                                    style: TextStyle(color: spot.barIndex == 0 ? Colors.greenAccent : spot.barIndex == 1 ? Colors.redAccent : Colors.white70, fontSize: 10, fontWeight: FontWeight.normal),
++                                  ),
++                                ],
++                              );
++                            }).toList();
++                          },
++                        ),
++                      ),
+                         LineChartBarData(
+                           isCurved: true, preventCurveOverShooting: true, color: successColor, barWidth: 2, isStrokeCapRound: true,
+                           dotData: FlDotData(
+[diff_block_end]
+
+Please note that the above snippet only shows the MODIFIED lines from the last change. It shows up to 3 lines of unchanged lines before and after the modified lines. The actual file contents may have many more lines not shown.
+
+We did our best to apply changes despite some inaccuracies. Double check if the edit applied is what you intended.

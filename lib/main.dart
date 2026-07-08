@@ -2,12 +2,45 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
-import 'app/network/translations.dart'; 
+import 'app/network/translations.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'firebase_options.dart'; // Generated Firebase config
+import 'app/network/api_client.dart';
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  print("Handling a background message: ${message.messageId}");
+}
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await GetStorage.init();
-  runApp(MyApp());
+  
+  // Background handler HARUS didaftarkan sebelum Firebase.initializeApp
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Register device token
+  String? fcmToken;
+  try {
+    fcmToken = await FirebaseMessaging.instance.getToken();
+  } catch (e) {
+    print("Warning: Failed to get FCM token: $e");
+  }
+
+  if (fcmToken != null) {
+    try {
+      await authorizedPost('/api/member/fcm-token', {'token': fcmToken});
+    } catch (e) {
+      // ignore errors
+    }
+  }
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -22,7 +55,7 @@ class MyApp extends StatelessWidget {
 
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Koperasi Simpanan Harkat',
+      title: 'Koperasi Simpanku',
       initialRoute: Routes.SPLASH,
       getPages: AppPages.routes,
       translations: AppTranslations(),

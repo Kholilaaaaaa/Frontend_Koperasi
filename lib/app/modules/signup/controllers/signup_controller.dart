@@ -31,10 +31,6 @@ class SignupController extends GetxController {
 
   @override
   void onClose() {
-    nameController.dispose();
-    emailOrPhoneController.dispose();
-    passwordController.dispose();
-    confirmPasswordController.dispose();
     super.onClose();
   }
 
@@ -136,40 +132,52 @@ class SignupController extends GetxController {
   Future<void> signupWithGoogle() async {
     try {
       final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
-      
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
-      // Kirim idToken ke Flask
+      isLoading.value = true;
+
+      // Panggil endpoint BARU: register google → kirim OTP ke email Google
       final response = await http.post(
-        Uri.parse('$baseUrl/api/auth/google-mobile'),
+        Uri.parse('$baseUrl/api/auth/google-register-mobile'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'idToken': googleAuth.idToken}),
+        body: jsonEncode({'idToken': googleAuth.idToken ?? ''}),
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
+      final data = jsonDecode(response.body);
+
+      if ((response.statusCode == 200 || response.statusCode == 201) && data['success'] == true) {
+        final email = data['email'] ?? googleUser.email;
+
         Get.snackbar(
-          'Sukses',
-          'Berhasil mendaftar dengan akun Google: ${googleUser.displayName}',
-          backgroundColor: Colors.green,
+          'Kode OTP Terkirim',
+          'Kode verifikasi telah dikirim ke $email. Silakan cek inbox Anda.',
+          backgroundColor: Colors.blue,
           colorText: Colors.white,
+          duration: const Duration(seconds: 5),
         );
-        
-        box.write('isLoggedIn', true);
-        box.write('loginType', 'email');
-        box.write('userEmail', googleUser.email);
-        
-        if (data['user'] != null && data['user']['id'] != null) {
-          box.write('userId', data['user']['id']);
-        }
-        
-        // Cek status member dan navigasi
-        await _checkMemberStatusAndRoute();
+
+        // Arahkan ke halaman Verifikasi OTP (sama seperti signup manual)
+        Get.toNamed(Routes.VERIFICATION, arguments: {'email': email});
+
+      } else if (response.statusCode == 409 && data['already_registered'] == true) {
+        // Sudah terdaftar — arahkan ke Login
+        Get.snackbar(
+          'Sudah Terdaftar',
+          'Akun Google ini sudah terdaftar. Silakan Login.',
+          backgroundColor: Colors.orange.shade700,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+          mainButton: TextButton(
+            onPressed: () => Get.offNamed(Routes.LOGIN),
+            child: const Text('Login', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        );
+
       } else {
         Get.snackbar(
-          'Error Backend',
-          'Gagal autentikasi di server: ${response.statusCode}',
-          backgroundColor: Colors.orange,
+          'Signup Gagal',
+          data['error'] ?? 'Terjadi kesalahan saat mendaftar dengan Google',
+          backgroundColor: Colors.red,
           colorText: Colors.white,
         );
       }
@@ -180,6 +188,8 @@ class SignupController extends GetxController {
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+    } finally {
+      isLoading.value = false;
     }
   }
 

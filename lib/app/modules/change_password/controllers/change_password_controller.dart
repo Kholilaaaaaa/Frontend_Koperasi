@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
 import 'package:pattern_getx_cli/app/network/api_client.dart';
+import 'package:pattern_getx_cli/app/routes/app_routes.dart';
 
 class ChangePasswordController extends GetxController {
   final oldPasswordController = TextEditingController();
@@ -11,6 +14,9 @@ class ChangePasswordController extends GetxController {
   final isOldPasswordVisible = false.obs;
   final isNewPasswordVisible = false.obs;
   final isConfirmPasswordVisible = false.obs;
+
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  final box = GetStorage();
 
   @override
   void onClose() {
@@ -50,15 +56,33 @@ class ChangePasswordController extends GetxController {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data['success'] == true) {
-        Get.back(); // Go back to settings page
+        // Hapus token JWT lama agar sesi tidak valid lagi
+        await _secureStorage.delete(key: 'jwt_token');
+
+        // Hapus data sesi login
+        box.remove('isLoggedIn');
+        box.remove('userId');
+        box.remove('userName');
+        box.remove('loginType');
+        box.remove('userEmail');
+        box.remove('userPhone');
+        box.remove('memberId');
+        box.remove('userAvatarPath');
+        box.remove('userAddress');
+
+        // Tampilkan pesan sukses & arahkan ke halaman login
         Get.snackbar(
           'Sukses', 
-          data['message'] ?? 'Kata sandi berhasil diubah', 
+          'Kata sandi berhasil diubah. Silakan login kembali dengan sandi baru.', 
           backgroundColor: Colors.green, 
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM,
           margin: const EdgeInsets.all(20),
+          duration: const Duration(seconds: 4),
         );
+
+        // Navigasi ke login dan hapus semua halaman sebelumnya
+        Get.offAllNamed(Routes.LOGIN);
       } else {
         Get.snackbar(
           'Gagal', 
@@ -78,3 +102,4 @@ class ChangePasswordController extends GetxController {
     }
   }
 }
+

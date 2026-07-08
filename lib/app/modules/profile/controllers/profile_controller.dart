@@ -1,9 +1,12 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:pattern_getx_cli/app/network/api_client.dart';
 import '../../dashboard_status/controllers/dashboard_status_controller.dart';
+import '../../member_dashboard/controllers/member_dashboard_controller.dart';
 
 class ProfileController extends GetxController {
   var name = "Budi Santoso".obs;
@@ -19,48 +22,99 @@ class ProfileController extends GetxController {
   final box = GetStorage();
   var avatarPath = ''.obs;
   
-  void saveProfile() {
-    // Update reactive values from controllers
-    name.value = nameController.text.trim();
-    email.value = emailController.text.trim();
-    phone.value = phoneController.text.trim();
-    address.value = addressController.text.trim();
-    memberId.value = memberIdController.text.trim();
-    // persist to local storage so other parts of the app can read updated values
-    box.write('userName', name.value);
-    box.write('userEmail', email.value);
-    box.write('userPhone', phone.value);
-    box.write('userAddress', address.value);
-    box.write('memberId', memberId.value);
-    // ensure avatar path also persisted (pickAvatarImage also writes it)
-    if (avatarPath.value.isNotEmpty) {
-      box.write('userAvatarPath', avatarPath.value);
+  Future<void> saveProfile() async {
+    if (nameController.text.trim().isEmpty ||
+        emailController.text.trim().isEmpty ||
+        phoneController.text.trim().isEmpty ||
+        addressController.text.trim().isEmpty) {
+      Get.snackbar('Error', 'Semua kolom wajib diisi.', 
+          backgroundColor: Colors.red, colorText: Colors.white);
+      return;
     }
 
-    // Also update DashboardStatusController if it's in memory
-    try {
-      if (Get.isRegistered()) {
-        // attempt to find DashboardStatusController by type if present
-        if (Get.isRegistered<DashboardStatusController>()) {
-          final ds = Get.find<DashboardStatusController>();
-          ds.userName.value = name.value;
-          // update avatar path on dashboard controller as well
-          if (ds.userAvatarPath != null) {
-            ds.userAvatarPath.value = avatarPath.value;
-          }
-        }
-      }
-    } catch (_) {}
-
-    // Close the page
-    Get.back();
-    Get.snackbar(
-      'Sukses', 
-      'Profil berhasil diperbarui',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: const Color(0xFF6B0D0D),
-      colorText: Colors.white,
+    Get.dialog(
+      const Center(child: CircularProgressIndicator(color: Color(0xFF6B0D0D))),
+      barrierDismissible: false,
     );
+
+    try {
+      final Map<String, String> fields = {
+        'full_name': nameController.text.trim(),
+        'phone': phoneController.text.trim(),
+        'address': addressController.text.trim(),
+      };
+
+      final response = await authorizedMultipartPost(
+        endpoint: '/api/member/update-profile',
+        fields: fields,
+        fileKey: 'avatar',
+        filePath: avatarPath.value,
+      );
+
+      Get.back(); // Close loading dialog
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        name.value = nameController.text.trim();
+        email.value = emailController.text.trim();
+        phone.value = phoneController.text.trim();
+        address.value = addressController.text.trim();
+        memberId.value = memberIdController.text.trim();
+        
+        box.write('userName', name.value);
+        box.write('userEmail', email.value);
+        box.write('userPhone', phone.value);
+        box.write('userAddress', address.value);
+        
+        if (data['avatar_path'] != null) {
+          avatarPath.value = data['avatar_path'];
+          box.write('userAvatarPath', data['avatar_path']);
+        }
+
+        try {
+          if (Get.isRegistered<DashboardStatusController>()) {
+            final ds = Get.find<DashboardStatusController>();
+            ds.userName.value = name.value;
+            if (ds.userAvatarPath != null) {
+              ds.userAvatarPath.value = avatarPath.value;
+            }
+          }
+        } catch (_) {}
+
+        try {
+          if (Get.isRegistered<MemberDashboardController>()) {
+            final mdc = Get.find<MemberDashboardController>();
+            mdc.refreshUserDetails();
+          }
+        } catch (_) {}
+
+        Get.back(); // Return to settings page
+
+        Get.snackbar(
+          'Sukses', 
+          'Profil berhasil diperbarui',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: const Color(0xFF6B0D0D),
+          colorText: Colors.white,
+        );
+      } else {
+        Get.snackbar(
+          'Gagal', 
+          data['error'] ?? 'Gagal memperbarui profil.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.back(); // Close loading dialog
+      Get.snackbar(
+        'Error', 
+        'Gagal menghubungi server: $e', 
+        backgroundColor: Colors.orange, 
+        colorText: Colors.white,
+      );
+    }
   }
 
   @override

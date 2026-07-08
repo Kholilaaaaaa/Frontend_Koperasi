@@ -9,6 +9,8 @@ import '../../../../routes/app_routes.dart';
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
 
+  MemberDashboardController get controller => Get.find<MemberDashboardController>();
+
   static const themeColor = Color(0xFF6B0D0D);
   static Color getBgColor(BuildContext context) => Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1A1A1A) : const Color(0xFFFFF9F6);
 
@@ -70,14 +72,20 @@ class SettingsView extends StatelessWidget {
         
         const SizedBox(height: 24),
         _buildSectionTitle(context, 'notifikasi'.tr),
-        _buildNotificationItem(context, Icons.account_balance_wallet_outlined, 'update_saldo'.tr, 'notif_saldo'.tr, true),
-        _buildNotificationItem(context, Icons.campaign_outlined, 'promosi'.tr, 'notif_promosi'.tr, true),
+        Obx(() => _buildNotificationItem(context, Icons.account_balance_wallet_outlined, 'update_saldo'.tr, 'notif_saldo'.tr, controller.isNotifPenarikanEnabled.value, (val) => controller.toggleNotifPenarikan(val))),
+        Obx(() => _buildNotificationItem(context, Icons.campaign_outlined, 'promosi'.tr, 'notif_promosi'.tr, controller.isNotifPromosiEnabled.value, (val) => controller.toggleNotifPromosi(val))),
             
             const SizedBox(height: 32),
             _buildSectionTitle(context, 'tentang'.tr),
-            _buildAboutItem(context, 'versi'.tr, 'v2.4.0-gold'),
-            _buildAboutItem(context, 'layanan'.tr, null, isLink: true),
-            _buildAboutItem(context, 'privasi'.tr, null, isLink: true),
+            _buildAboutItem(context, 'versi'.tr, 'v1.0.0', onTap: () {
+              _showInfoSheet(context, 'Versi Aplikasi', 'Versi Aplikasi: v1.0.0');
+            }),
+            _buildAboutItem(context, 'layanan'.tr, null, isLink: true, onTap: () {
+              _showInfoSheet(context, 'Ketentuan Layanan', '• Syarat menjadi anggota.\n• Ketentuan pengajuan simpanan dan pinjaman.\n• Hak dan kewajiban anggota.\n• Aturan penggunaan akun.\n• Larangan penyalahgunaan aplikasi.');
+            }),
+            _buildAboutItem(context, 'privasi'.tr, null, isLink: true, onTap: () {
+              _showInfoSheet(context, 'Kebijakan Privasi', '• Data pribadi yang dikumpulkan.\n• Tujuan penggunaan data.\n• Keamanan data.\n• Hak pengguna terhadap data pribadinya.');
+            }),
             
             const SizedBox(height: 40),
             _buildLogoutButtons(context),
@@ -85,7 +93,7 @@ class SettingsView extends StatelessWidget {
             const SizedBox(height: 24),
             const Center(
               child: Text(
-                'KOPERASI SIMPANAN HARKAT © 2024',
+                'KOPERASI SIMPANKU © 2026',
                 style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black26, letterSpacing: 1),
               ),
             ),
@@ -102,28 +110,15 @@ class SettingsView extends StatelessWidget {
       children: [
         Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2A2A2A) : Colors.white,
-                border: Border.all(color: themeColor.withOpacity(0.1)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: const Center(
-                child: Icon(Icons.account_balance, color: themeColor, size: 20),
-              ),
+            Image.asset(
+              'assets/images/logo_koperasi.png',
+              width: 36,
+              height: 36,
+              fit: BoxFit.contain,
             ),
             const SizedBox(width: 12),
             const Text(
-              'KOPERASI SIMPANAN HARKAT',
+              'KOPERASI SIMPANKU',
               style: TextStyle(
                 color: themeColor,
                 fontWeight: FontWeight.w900,
@@ -133,21 +128,55 @@ class SettingsView extends StatelessWidget {
             ),
           ],
         ),
-        GestureDetector(
-          onTap: () => Get.toNamed(Routes.NOTIFIKASI),
-          child: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: themeColor.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.notifications_none_outlined, 
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : themeColor, 
-              size: 24,
-            ),
+        Obx(() => GestureDetector(
+          onTap: () async {
+            await Get.toNamed(Routes.NOTIFIKASI);
+            controller.fetchUnreadNotificationCount();
+          },
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: themeColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.notifications_none_outlined, 
+                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : themeColor, 
+                  size: 24,
+                ),
+              ),
+              if (controller.unreadNotificationCount.value > 0)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${controller.unreadNotificationCount.value}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ),
+        )),
       ],
     );
   }
@@ -168,11 +197,6 @@ class SettingsView extends StatelessWidget {
   }
 
   Widget _buildProfileCard(BuildContext context) {
-    final box = GetStorage();
-    DashboardStatusController? ds;
-    try {
-      if (Get.isRegistered<DashboardStatusController>()) ds = Get.find<DashboardStatusController>();
-    } catch (_) {}
     return GestureDetector(
       onTap: () => Get.toNamed(Routes.PROFILE),
       child: Container(
@@ -185,19 +209,25 @@ class SettingsView extends StatelessWidget {
         child: Row(
           children: [
             Obx(() {
-              final _ = Get.find<MemberDashboardController>().count.value; // Prevent Obx crash if ds is null
-              final avatarPath = ds?.userAvatarPath.value ?? box.read('userAvatarPath') ?? '';
+              final avatarPath = controller.rxAvatarPath.value;
               if (avatarPath.isNotEmpty) {
+                final isNetwork = avatarPath.startsWith('http://') || avatarPath.startsWith('https://');
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.file(
-                    File(avatarPath), 
-                    width: 60, height: 60, fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle, size: 60, color: Colors.grey),
-                  ),
+                  child: isNetwork
+                    ? Image.network(
+                        avatarPath,
+                        width: 60, height: 60, fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle, size: 60, color: Colors.grey),
+                      )
+                    : Image.file(
+                        File(avatarPath), 
+                        width: 60, height: 60, fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.account_circle, size: 60, color: Colors.grey),
+                      ),
                 );
               }
-              final name = ds?.userName.value ?? box.read('userName') ?? 'Budi Santoso';
+              final name = controller.rxUserName.value;
               final encoded = Uri.encodeComponent(name);
               final url = 'https://ui-avatars.com/api/?name=$encoded&background=6B0D0D&color=fff';
               return ClipRRect(
@@ -215,8 +245,7 @@ class SettingsView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Obx(() {
-                    final _ = Get.find<MemberDashboardController>().count.value; // Prevent Obx crash
-                    final name = ds?.userName.value ?? box.read('userName') ?? 'Budi Santoso';
+                    final name = controller.rxUserName.value;
                     return Text(
                       name, 
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87),
@@ -225,10 +254,10 @@ class SettingsView extends StatelessWidget {
                     );
                   }),
                   const SizedBox(height: 4),
-                  Builder(builder: (context) {
-                    final id = box.read('memberId') ?? '#KS-B8291';
+                  Obx(() {
+                    final id = controller.rxMemberId.value;
                     return Text(
-                      'ID Anggota: $id', 
+                      'id_anggota'.trParams({'id': id}), 
                       style: TextStyle(fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black38),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -269,7 +298,7 @@ class SettingsView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(color: Colors.orange.withAlpha(25), borderRadius: BorderRadius.circular(8)),
-            child: const Text('Terverifikasi', style: TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold)),
+            child: Text('terverifikasi'.tr, style: const TextStyle(color: Colors.orange, fontSize: 10, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -318,12 +347,12 @@ class SettingsView extends StatelessWidget {
     );
   }
 
-  Widget _buildNotificationItem(BuildContext context, IconData icon, String title, String desc, bool value) {
+  Widget _buildNotificationItem(BuildContext context, IconData icon, String title, String desc, bool value, Function(bool) onToggle) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF2A2A2A) : Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1A1A1A) : Colors.white,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -333,7 +362,7 @@ class SettingsView extends StatelessWidget {
               Icon(icon, color: themeColor, size: 20),
               const SizedBox(width: 12),
               Expanded(child: Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87))),
-              Switch(value: value, onChanged: (v) {}, activeThumbColor: themeColor),
+              Switch(value: value, onChanged: onToggle, activeThumbColor: themeColor),
             ],
           ),
           const SizedBox(height: 12),
@@ -343,20 +372,67 @@ class SettingsView extends StatelessWidget {
     );
   }
 
-  Widget _buildAboutItem(BuildContext context, String title, String? value, {bool isLink = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.black.withAlpha(13))),
+  Widget _buildAboutItem(BuildContext context, String title, String? value, {bool isLink = false, VoidCallback? onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: Colors.black.withAlpha(13))),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87)),
+            if (value != null) Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black38)),
+            if (isLink) const Icon(Icons.open_in_new, size: 16, color: Colors.black26),
+          ],
+        ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87)),
-          if (value != null) Text(value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black38)),
-          if (isLink) const Icon(Icons.open_in_new, size: 16, color: Colors.black26),
-        ],
+    );
+  }
+
+  void _showInfoSheet(BuildContext context, String title, String content) {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1A1A1A) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18, 
+                fontWeight: FontWeight.bold, 
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : themeColor
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              content,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Get.back(),
+                child: const Text('Tutup', style: TextStyle(color: Colors.black38)),
+              ),
+            ),
+          ],
+        ),
       ),
+      isScrollControlled: true,
     );
   }
 
@@ -364,7 +440,7 @@ class SettingsView extends StatelessWidget {
     return Column(
       children: [
         OutlinedButton.icon(
-          onPressed: () {},
+          onPressed: () => Get.toNamed(Routes.RESIGN),
           icon: const Icon(Icons.person_remove_outlined, size: 18),
           label: Text('keluar_anggota'.tr),
           style: OutlinedButton.styleFrom(

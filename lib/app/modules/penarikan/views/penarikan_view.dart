@@ -23,18 +23,18 @@ class PenarikanView extends GetView<PenarikanController> {
               _buildTopBar(),
               const SizedBox(height: 24),
             Text(
-              'Pengajuan Penarikan',
-              style: TextStyle(
+              'pengajuan_penarikan'.tr,
+              style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w900,
                 color: themeColor,
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Kelola dana simpanan Anda secara aman dan transparan melalui sistem ledger digital kami.',
+            Text(
+              'desc_penarikan'.tr,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.black54,
                 fontSize: 12,
                 height: 1.5,
@@ -64,9 +64,9 @@ class PenarikanView extends GetView<PenarikanController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'TOTAL SALDO TERSEDIA',
-                    style: TextStyle(
+                  Text(
+                    'total_saldo_tersedia'.tr,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -108,9 +108,9 @@ class PenarikanView extends GetView<PenarikanController> {
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
-                              'STATUS AKUN',
+                              'status_akun'.tr,
                               style: TextStyle(
                                 color: Colors.white38,
                                 fontSize: 8,
@@ -118,8 +118,8 @@ class PenarikanView extends GetView<PenarikanController> {
                               ),
                             ),
                             Text(
-                              'Anggota Aktif',
-                              style: TextStyle(
+                              'anggota_aktif'.tr,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -138,24 +138,24 @@ class PenarikanView extends GetView<PenarikanController> {
             const SizedBox(height: 40),
             
             // Form
-            _buildLabel('PILIH SIMPANAN'),
+            _buildLabel('pilih_simpanan'.tr),
             _buildDropdown(
               value: controller.selectedSimpanan,
               items: controller.daftarSimpanan,
             ),
             
             const SizedBox(height: 24),
-            _buildLabel('NOMINAL PENARIKAN'),
+            _buildLabel('nominal_penarikan'.tr),
             _buildTextField(
               controller: controller.nominalController,
               hint: '0',
               prefix: 'Rp ',
-              helper: 'Minimal penarikan Rp 50.000',
+              helper: 'helper_penarikan'.tr,
               keyboardType: TextInputType.number,
             ),
             
             const SizedBox(height: 24),
-            _buildLabel('PILIH REKENING TUJUAN'),
+            _buildLabel('pilih_rekening_tujuan'.tr),
             _buildTextField(
               controller: controller.rekeningTujuanController,
               hint: '',
@@ -164,10 +164,10 @@ class PenarikanView extends GetView<PenarikanController> {
             ),
             
             const SizedBox(height: 24),
-            _buildLabel('ALASAN PENARIKAN (OPSIONAL)'),
+            _buildLabel('alasan_penarikan'.tr),
             _buildTextField(
               controller: controller.alasanController,
-              hint: 'Contoh: Kebutuhan mendesak keluarga',
+              hint: 'hint_alasan_penarikan'.tr,
               maxLines: 3,
             ),
             
@@ -192,10 +192,10 @@ class PenarikanView extends GetView<PenarikanController> {
                     child: Icon(Icons.security, color: themeColor, size: 20),
                   ),
                   const SizedBox(width: 16),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Penarikan akan diproses dalam 1-3 hari kerja untuk verifikasi keamanan dan integritas dana bersama Anda.',
-                      style: TextStyle(fontSize: 10, color: Colors.black54, height: 1.4),
+                      'info_penarikan'.tr,
+                      style: const TextStyle(fontSize: 10, color: Colors.black54, height: 1.4),
                     ),
                   ),
                 ],
@@ -205,10 +205,10 @@ class PenarikanView extends GetView<PenarikanController> {
             const SizedBox(height: 40),
             
             // Submit Button
-            SizedBox(
+            Obx(() => SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: controller.submitPenarikan,
+                onPressed: controller.isLoading.value ? null : controller.submitPenarikan,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: themeColor,
                   padding: const EdgeInsets.symmetric(vertical: 20),
@@ -217,16 +217,25 @@ class PenarikanView extends GetView<PenarikanController> {
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
-                  'Ajukan Penarikan Sekarang',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+                child: controller.isLoading.value
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        'ajukan_penarikan_sekarang'.tr,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
-            ),
+            )),
             const SizedBox(height: 48),
           ],
         ),
@@ -248,30 +257,17 @@ class PenarikanView extends GetView<PenarikanController> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const SizedBox(width: 16),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  border: Border.all(color: themeColor.withValues(alpha: 0.1)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(Icons.account_balance, color: themeColor, size: 20),
-                ),
+              const SizedBox(width: 8),
+              Image.asset(
+                'assets/images/logo_koperasi.png',
+                width: 36,
+                height: 36,
+                fit: BoxFit.contain,
               ),
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  'KOPERASI SIMPANAN HARKAT',
+                  'KOPERASI SIMPANKU',
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                   style: TextStyle(

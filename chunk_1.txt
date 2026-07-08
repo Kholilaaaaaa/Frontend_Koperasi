@@ -1,0 +1,6 @@
+                  _buildHeaderTitle(context),
+                  const SizedBox(height: 20),
+                  _buildSavingTypeFilter(context, controller),
+                  const SizedBox(height: 16),
+                  _buildFilterSection(context, controller),
+                  const SizedBox(height: 20),

@@ -14,6 +14,7 @@ class DashboardStatusController extends GetxController {
   var status = 'pending'.obs; // 'pending', 'approved', 'rejected'
   var rejectionReason = ''.obs;
   var isLoading = true.obs;
+  var registrationDetails = {}.obs; // Menyimpan data yang sudah disubmit (KTP, dll)
   Timer? _timer;
 
   @override
@@ -74,6 +75,10 @@ class DashboardStatusController extends GetxController {
           box.write('userPhone', data['phone']);
         }
         
+        if (data['registration_details'] != null) {
+          registrationDetails.value = data['registration_details'];
+        }
+
         if (status.value == 'rejected' && data['registration_details'] != null) {
           rejectionReason.value = data['registration_details']['rejection_reason'] ?? '';
         } else {

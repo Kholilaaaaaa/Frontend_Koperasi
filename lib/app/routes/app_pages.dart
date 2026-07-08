@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import '../modules/buka_simpanan/bindings/buka_simpanan_binding.dart';
 import '../modules/buka_simpanan/views/buka_simpanan_view.dart';
+import '../modules/notifikasi/bindings/notifikasi_binding.dart';
 import '../modules/notifikasi/views/notifikasi_view.dart';
 import '../modules/penarikan/bindings/penarikan_binding.dart';
 import '../modules/penarikan/views/penarikan_view.dart';
@@ -28,6 +29,8 @@ import '../modules/forgot_password/bindings/forgot_password_binding.dart';
 import '../modules/forgot_password/views/forgot_password_view.dart';
 import '../modules/change_password/bindings/change_password_binding.dart';
 import '../modules/change_password/views/change_password_view.dart';
+import '../modules/resign/bindings/resign_binding.dart';
+import '../modules/resign/views/resign_view.dart';
 import 'app_routes.dart';
 import 'visitor_dashboard_binding.dart';
 
@@ -91,6 +94,7 @@ class AppPages {
     GetPage(
       name: Routes.NOTIFIKASI,
       page: () => const NotifikasiView(),
+      binding: NotifikasiBinding(),
     ),
     GetPage(
       name: Routes.VERIFICATION,
@@ -106,6 +110,11 @@ class AppPages {
       name: Routes.CHANGE_PASSWORD,
       page: () => const ChangePasswordView(),
       binding: ChangePasswordBinding(),
+    ),
+    GetPage(
+      name: Routes.RESIGN,
+      page: () => const ResignMembershipView(),
+      binding: ResignBinding(),
     ),
   ];
 }

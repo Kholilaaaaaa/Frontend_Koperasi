@@ -1,0 +1,55 @@
+                      lineTouchData: LineTouchData(
+                        touchTooltipData: LineTouchTooltipData(
+                          tooltipBgColor: const Color(0xFF2E2E2E),
+                          tooltipRoundedRadius: 8,
+                          getTooltipItems: (touchedSpots) {
+                            return touchedSpots.map((spot) {
+                              if (spot.barIndex != 2) return null; // Hanya tampilkan tooltip di garis Saldo (barIndex 2)
+                              
+                              final idx = spot.x.toInt();
+                              String dateLabel = '';
+                              if (idx >= 0 && idx < trend.months.length) {
+                                dateLabel = trend.months[idx];
+                              }
+                              
+                              double netFlow = 0;
+                              double deposit = 0;
+                              double withdrawal = 0;
+                              
+                              if (idx < trend.depositData.length) {
+                                deposit = trend.depositData[idx];
+                              }
+                              if (idx < trend.withdrawalData.length) {
+                                withdrawal = trend.withdrawalData[idx];
+                              }
+                              netFlow = deposit - withdrawal;
+                              
+                              final fmt = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
+                              return LineTooltipItem(
+                                '$dateLabel\n',
+                                const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                                children: [
+                                  TextSpan(
+                                    text: 'Net Flow: ${fmt.format(netFlow)}\n',
+                                    style: TextStyle(color: netFlow >= 0 ? Colors.purpleAccent : Colors.orangeAccent, fontSize: 10, fontWeight: FontWeight.normal),
+                                  ),
+                                  TextSpan(
+                                    text: 'Pemasukan: ${fmt.format(deposit)}\n',
+                                    style: const TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.normal),
+                                  ),
+                                  TextSpan(
+                                    text: 'Pengeluaran: ${fmt.format(withdrawal)}\n',
+                                    style: const TextStyle(color: Colors.redAccent, fontSize: 10, fontWeight: FontWeight.normal),
+                                  ),
+                                  TextSpan(
+                                    text: 'Saldo: ${fmt.format(spot.y)}',
+                                    style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.normal),
+                                  ),
+                                ],
+                              );
+                            }).toList();
+                          },
+                        ),
+                      ),
+                      gridData: FlGridData(

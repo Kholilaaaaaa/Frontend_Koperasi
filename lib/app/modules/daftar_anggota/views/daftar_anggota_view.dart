@@ -39,30 +39,17 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const SizedBox(width: 16),
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  border: Border.all(color: themeColor.withValues(alpha: 0.1)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(Icons.account_balance, color: themeColor, size: 20),
-                ),
+              const SizedBox(width: 8),
+              Image.asset(
+                'assets/images/logo_koperasi.png',
+                width: 36,
+                height: 36,
+                fit: BoxFit.contain,
               ),
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  'KOPERASI SIMPANAN HARKAT',
+                  'KOPERASI SIMPANKU',
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                   style: TextStyle(
@@ -116,8 +103,8 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
           _buildStepBadge(1, 5),
           const SizedBox(height: 16),
           Text(
-            'Daftar Anggota\nKoperasi',
-            style: TextStyle(
+            'daftar_anggota_title'.tr,
+            style: const TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w900,
               color: themeColor,
@@ -125,12 +112,12 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Bergabunglah dengan Koperasi Simpanan Harkat untuk masa depan finansial yang lebih stabil.',
-            style: TextStyle(fontSize: 15, color: Colors.black54, height: 1.5),
+          Text(
+            'desc_daftar_anggota'.tr,
+            style: const TextStyle(fontSize: 15, color: Colors.black54, height: 1.5),
           ),
           const SizedBox(height: 40),
-          _buildLabel('EMAIL ${controller.loginType.value == 'phone' ? '(WAJIB DIISI)' : '(SUDAH TERISI)'}'),
+          _buildLabel('EMAIL ${controller.loginType.value == 'phone' ? 'wajib_diisi'.tr : 'sudah_terisi'.tr}'),
           const SizedBox(height: 8),
           _buildTextField(
             controller: controller.emailController,
@@ -138,7 +125,7 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
             readOnly: controller.loginType.value == 'email',
           ),
           const SizedBox(height: 24),
-          _buildLabel('PHONE NUMBER ${controller.loginType.value == 'email' ? '(WAJIB DIISI)' : '(SUDAH TERISI)'}'),
+          _buildLabel('PHONE NUMBER ${controller.loginType.value == 'email' ? 'wajib_diisi'.tr : 'sudah_terisi'.tr}'),
           const SizedBox(height: 8),
           Row(
             children: [
@@ -163,7 +150,7 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
             ],
           ),
           const SizedBox(height: 40),
-          _buildActionButton('Lanjut Ke Verifikasi Dokumen', controller.nextStep),
+          _buildActionButton('lanjut_verifikasi'.tr, controller.nextStep),
         ],
       ),
     );
@@ -177,25 +164,25 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Verifikasi Identitas',
-            style: TextStyle(
+            'verifikasi_identitas'.tr,
+            style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w900,
               color: themeColor,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Lengkapi dokumen koperasi Anda untuk memulai perjalanan finansial yang aman.',
-            style: TextStyle(fontSize: 14, color: Colors.black54),
+          Text(
+            'desc_verifikasi_identitas'.tr,
+            style: const TextStyle(fontSize: 14, color: Colors.black54),
           ),
           const SizedBox(height: 32),
           
           // KTP Section
           controller.ktpImage.value == null
               ? _buildDocItem(
-                  'Foto KTP',
-                  'Pastikan foto jelas dan terbaca',
+                  'foto_ktp'.tr,
+                  'desc_foto_ktp'.tr,
                   Icons.badge_outlined,
                   false,
                   () => controller.startKtpScannerFlow(),
@@ -218,12 +205,12 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Foto KTP Terdeteksi',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: themeColor, fontSize: 16),
+                                  'foto_ktp_terdeteksi'.tr,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, color: themeColor, fontSize: 16),
                                 ),
-                                const Text(
-                                  'Data Anda akan diekstraksi secara otomatis.',
-                                  style: TextStyle(fontSize: 11, color: Colors.black54),
+                                Text(
+                                  'desc_ktp_terdeteksi'.tr,
+                                  style: const TextStyle(fontSize: 11, color: Colors.black54),
                                 ),
                               ],
                             ),
@@ -248,7 +235,7 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(16),
-                              child: Image.file(controller.ktpImage.value!, width: double.infinity, fit: BoxFit.cover),
+                              child: Image.file(controller.ktpImage.value!, width: double.infinity, fit: BoxFit.cover, cacheWidth: 800),
                             ),
                             Positioned(
                               top: 12,
@@ -257,10 +244,10 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(color: Colors.green, borderRadius: BorderRadius.circular(20)),
                                 child: Row(
-                                  children: const [
-                                    Icon(Icons.check_circle, color: Colors.white, size: 12),
-                                    SizedBox(width: 4),
-                                    Text('TERDETEKSI', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                  children: [
+                                    const Icon(Icons.check_circle, color: Colors.white, size: 12),
+                                    const SizedBox(width: 4),
+                                    Text('terdeteksi'.tr, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                                   ],
                                 ),
                               ),
@@ -275,7 +262,7 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                             child: ElevatedButton.icon(
                               onPressed: () => controller.startKtpScannerFlow(),
                               icon: const Icon(Icons.refresh, size: 18, color: Colors.white),
-                              label: const Text('Ganti Foto', style: TextStyle(color: Colors.white)),
+                              label: Text('ganti_foto'.tr, style: const TextStyle(color: Colors.white)),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: themeColor,
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -289,15 +276,15 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                 ),
           
           const SizedBox(height: 32),
-          const Text('DOKUMEN PENDUKUNG', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black38, letterSpacing: 1)),
+          Text('dokumen_pendukung'.tr, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black38, letterSpacing: 1)),
           const SizedBox(height: 16),
           
-          _buildDocItem('Kartu Anggota', 'Unggah dari galeri (Max 5MB)', Icons.card_membership_outlined, controller.kartuAnggotaImage.value != null, () => controller.pickImage('kartu_anggota', ImageSource.gallery)),
-          _buildDocItem('Pas Foto', 'Unggah dari galeri, wajah tegak lurus', Icons.portrait_outlined, controller.pasFotoImage.value != null, () => controller.pickImage('pas_foto', ImageSource.gallery)),
-          _buildDocItem('Tanda Tangan', 'Unggah dari galeri, tinta hitam di kertas', Icons.gesture, controller.signatureImage.value != null, () => controller.pickImage('signature', ImageSource.gallery)),
+          _buildDocItem('kartu_anggota'.tr, 'unggah_galeri'.tr, Icons.card_membership_outlined, controller.kartuAnggotaImage.value != null, () => controller.pickImage('kartu_anggota', ImageSource.gallery)),
+          _buildDocItem('pas_foto'.tr, 'unggah_pas_foto'.tr, Icons.portrait_outlined, controller.pasFotoImage.value != null, () => controller.pickImage('pas_foto', ImageSource.gallery)),
+          _buildDocItem('tanda_tangan'.tr, 'unggah_tanda_tangan'.tr, Icons.gesture, controller.signatureImage.value != null, () => controller.pickImage('signature', ImageSource.gallery)),
           
           const SizedBox(height: 40),
-          _buildActionButton('Proses Verifikasi Sekarang', controller.nextStep),
+          _buildActionButton('proses_verifikasi'.tr, controller.nextStep),
         ],
       ),
     );
@@ -322,17 +309,17 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                 _buildStepBadge(3, 5),
                 const SizedBox(height: 24),
                 Text(
-                  'Konfirmasi Hasil Scan',
-                  style: TextStyle(
+                  'konfirmasi_hasil_scan'.tr,
+                  style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
                     color: themeColor,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Pastikan data berikut sesuai dengan KTP asli Anda. Anda dapat mengedit data jika terdapat kesalahan pembacaan.',
-                  style: TextStyle(
+                Text(
+                  'desc_konfirmasi_scan'.tr,
+                  style: const TextStyle(
                     fontSize: 13,
                     color: Colors.black54,
                     height: 1.4,
@@ -367,7 +354,7 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                isDup ? 'Teridentifikasi Duplikat!' : 'Data Bersih & Terverifikasi',
+                                isDup ? 'teridentifikasi_duplikat'.tr : 'data_bersih'.tr,
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: isDup ? Colors.red[900] : Colors.green[900],
@@ -378,7 +365,7 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                               Text(
                                 isDup
                                     ? reason
-                                    : 'KTP belum terdaftar di sistem koperasi. Anda dapat melanjutkan pendaftaran.',
+                                    : 'ktp_belum_terdaftar'.tr,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: isDup ? Colors.red[700] : Colors.green[700],
@@ -411,25 +398,53 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                   ),
                   child: Column(
                     children: [
-                      _buildDataField('NAMA LENGKAP', controller.nameController),
+                      _buildDataField('nama_lengkap_upper'.tr, controller.nameController),
                       const SizedBox(height: 24),
-                      _buildDataField('NOMOR NIK', controller.nikController),
+                      _buildDataField('nomor_nik'.tr, controller.nikController),
                       const SizedBox(height: 24),
                       _buildDataField(
-                        'TANGGAL LAHIR', 
+                        'tanggal_lahir'.tr, 
                         controller.dobController, 
                         suffix: const Icon(Icons.calendar_today_outlined, size: 18, color: Colors.redAccent),
                       ),
                       const SizedBox(height: 24),
-                      _buildDataField('JENIS KELAMIN', controller.genderController),
+                      _buildDataField('jenis_kelamin_upper'.tr, controller.genderController),
                       const SizedBox(height: 24),
-                      _buildDataField('AGAMA', controller.religionController),
+                      _buildDataField('agama_upper'.tr, controller.religionController),
                       const SizedBox(height: 24),
                       _buildDataField(
-                        'ALAMAT LENGKAP', 
+                        'alamat_lengkap'.tr, 
                         controller.addressController, 
                         maxLines: 3,
                       ),
+                      const SizedBox(height: 24),
+                      const Divider(thickness: 1.5),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.badge_outlined, size: 14, color: Color(0xFF6B0D0D)),
+                          const SizedBox(width: 6),
+                          Text(
+                            'data_kepegawaian'.tr,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF6B0D0D),
+                              letterSpacing: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'desc_data_kepegawaian'.tr,
+                        style: const TextStyle(fontSize: 11, color: Colors.black38),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDataField('nip_id_karyawan'.tr, controller.nipController, readOnly: false),
+                      const SizedBox(height: 24),
+                      // Jabatan dropdown
+                      _buildJabatanField(),
                     ],
                   ),
                 ),
@@ -448,14 +463,14 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Hasil Scan KTP',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    Text(
+                      'hasil_scan_ktp'.tr,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                     ),
                     TextButton.icon(
                       onPressed: () => controller.currentStep.value = 2,
                       icon: const Icon(Icons.refresh, size: 14),
-                      label: const Text('Scan Ulang', style: TextStyle(fontSize: 12)),
+                      label: Text('scan_ulang'.tr, style: const TextStyle(fontSize: 12)),
                       style: TextButton.styleFrom(foregroundColor: themeColor),
                     ),
                   ],
@@ -475,6 +490,7 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                             controller.ktpImage.value!,
                             width: double.infinity,
                             fit: BoxFit.cover,
+                            cacheWidth: 800,
                           )
                         : const Center(child: Icon(Icons.credit_card, size: 64, color: Colors.white24)),
                   ),
@@ -482,12 +498,12 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Icon(Icons.lock_outline, size: 12, color: Colors.black26),
-                    SizedBox(width: 4),
+                  children: [
+                    const Icon(Icons.lock_outline, size: 12, color: Colors.black26),
+                    const SizedBox(width: 4),
                     Text(
-                      'Data aman & terenkripsi oleh sistem perbankan',
-                      style: TextStyle(fontSize: 10, color: Colors.black26),
+                      'data_aman'.tr,
+                      style: const TextStyle(fontSize: 10, color: Colors.black26),
                     ),
                   ],
                 ),
@@ -503,12 +519,12 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
             child: Obx(() {
               final isDup = controller.isDuplicate.value;
               return _buildActionButton(
-                isDup ? 'KTP Terduplikasi' : 'Pilih Simpanan',
+                isDup ? 'ktp_terduplikasi'.tr : 'pilih_simpanan'.tr,
                 isDup
                     ? () {
                         Get.snackbar(
-                          'Pendaftaran Ditolak',
-                          'KTP Anda sudah terdaftar di sistem koperasi. Silakan hubungi admin.',
+                          'pendaftaran_ditolak'.tr,
+                          'ktp_terdaftar_admin'.tr,
                           backgroundColor: Colors.red,
                           colorText: Colors.white,
                           snackPosition: SnackPosition.BOTTOM,
@@ -526,79 +542,91 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
 
   // --- HELPER WIDGETS FOR VALIDATION ---
   
-  Widget _buildDataField(String label, TextEditingController textController, {Widget? suffix, int maxLines = 1}) {
-    // Otomatis tentukan badge berdasarkan isi field
-    final bool hasData = textController.text.trim().isNotEmpty;
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildDataField(String label, TextEditingController textController, {Widget? suffix, int maxLines = 1, bool readOnly = true}) {
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: textController,
+      builder: (context, value, _) {
+        final bool hasData = value.text.trim().isNotEmpty;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: Colors.black38,
-                letterSpacing: 0.5,
-              ),
-            ),
-            hasData
-              ? _buildBadge('OCR Verified', Colors.green, Icons.check_circle)
-              : _buildBadge('Review Required', Colors.orange, Icons.edit_note_outlined),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: !hasData ? const EdgeInsets.all(12) : EdgeInsets.zero,
-          decoration: !hasData
-              ? BoxDecoration(
-                  color: const Color(0xFFFFF2F2),
-                  borderRadius: BorderRadius.circular(12),
-                )
-              : null,
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  readOnly: false,
-                  controller: textController,
-                  maxLines: maxLines,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  label,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                  decoration: InputDecoration(
-                    isDense: true,
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF6B0D0D)),
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    color: Colors.black38,
+                    letterSpacing: 0.5,
                   ),
                 ),
+                if (readOnly)
+                  hasData
+                    ? _buildBadge('ocr_verified'.tr, Colors.green, Icons.check_circle)
+                    : _buildBadge('review_required'.tr, Colors.orange, Icons.edit_note_outlined)
+                else
+                  hasData
+                    ? _buildBadge('terisi'.tr, Colors.blue, Icons.check_circle_outline)
+                    : _buildBadge('wajib_dipilih'.tr, const Color(0xFF6B0D0D), Icons.edit_outlined),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: (!hasData && readOnly) ? const EdgeInsets.all(12) : EdgeInsets.zero,
+              decoration: (!hasData && readOnly)
+                  ? BoxDecoration(
+                      color: const Color(0xFFFFF2F2),
+                      borderRadius: BorderRadius.circular(12),
+                    )
+                  : null,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      readOnly: readOnly,
+                      controller: textController,
+                      maxLines: maxLines,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        filled: true,
+                        fillColor: readOnly ? Colors.grey[50] : Colors.blue.shade50,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: readOnly
+                              ? BorderSide(color: Colors.grey[300]!)
+                              : const BorderSide(color: Color(0xFF6B0D0D), width: 1.5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: Color(0xFF6B0D0D)),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      ),
+                    ),
+                  ),
+                  if (suffix != null) suffix,
+                ],
               ),
-              ?suffix,
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
+
 
   Widget _buildBadge(String text, Color color, IconData icon) {
     return Container(
@@ -625,8 +653,91 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
     );
   }
 
-  // --- STEP 4: SAVINGS SELECTION ---
+  Widget _buildJabatanField() {
+    final jabatanOptions = [
+      'Dosen',
+      'Tenaga Kependidikan',
+      'Staf Administrasi',
+      'Karyawan Honorer',
+      'Kepala Bagian',
+      'Pejabat Struktural',
+      'Guru',
+      'Lainnya',
+    ];
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller.jabatanController,
+      builder: (context, value, _) {
+        final selected = value.text;
+        return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'jabatan_unit'.tr,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black38,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              selected.isNotEmpty
+                ? _buildBadge('terisi'.tr, Colors.blue, Icons.check_circle_outline)
+                : _buildBadge('wajib_dipilih'.tr, const Color(0xFF6B0D0D), Icons.arrow_drop_down_circle_outlined),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              border: Border.all(color: const Color(0xFF6B0D0D), width: 1.5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selected.isNotEmpty ? selected : null,
+                hint: Text('pilih_jabatan'.tr, style: const TextStyle(color: Colors.black38, fontSize: 14)),
+                isExpanded: true,
+                items: jabatanOptions.map((j) => DropdownMenuItem(value: j, child: Text(j))).toList(),
+                onChanged: (val) {
+                  if (val != null) controller.jabatanController.text = val;
+                },
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+              ),
+            ),
+          ),
+        ],
+      );
+    });
+  }
+
+  // --- STEP 4: SAVINGS & BANK ---
   Widget _buildStep4() {
+    // Bank-bank umum yang banyak digunakan di Indonesia
+    final bankOptions = [
+      'BCA',
+      'Bank Mandiri',
+      'BRI',
+      'BNI',
+      'BSI (Bank Syariah Indonesia)',
+      'BTN',
+      'CIMB Niaga',
+      'Danamon',
+      'Permata Bank',
+      'Maybank',
+      'OCBC NISP',
+      'Bank Jago',
+      'SeaBank',
+      'Jenius (SMBC)',
+      'BPD (Bank Pembangunan Daerah)',
+      'Muamalat',
+      'BTPN',
+      'BPR',
+      'Lainnya',
+    ];
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -634,32 +745,155 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
         children: [
           _buildStepBadge(4, 5),
           const SizedBox(height: 16),
-          Text('Pilih Simpanan', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: themeColor)),
-          const SizedBox(height: 32),
-          _buildLabel('JENIS SIMPANAN'),
+          Text('simpanan_rekening'.tr, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: themeColor)),
           const SizedBox(height: 8),
+          Text(
+            'desc_simpanan_wajib'.tr,
+            style: const TextStyle(fontSize: 13, color: Colors.black54, height: 1.5),
+          ),
+          const SizedBox(height: 28),
+
+          // --- Simpanan Wajib Card (fixed, tidak bisa diubah saat pendaftaran) ---
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(border: Border.all(color: Colors.black12), borderRadius: BorderRadius.circular(8)),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: controller.selectedSavingsType.value,
-                isExpanded: true,
-                items: ['Simpanan Sukarela', 'Simpanan Pokok', 'Simpanan Wajib'].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-                onChanged: (v) => controller.selectedSavingsType.value = v!,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [themeColor, const Color(0xFFAA2222)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: themeColor.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.savings_outlined, color: Colors.white, size: 28),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('simpanan_wajib'.tr, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white70, letterSpacing: 1)),
+                      const SizedBox(height: 4),
+                      const Text('Rp 100.000', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white)),
+                      Text('setoran_awal'.tr, style: const TextStyle(fontSize: 11, color: Colors.white70)),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.lock_outline, color: Colors.white54, size: 20),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Info tambah simpanan lain
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.blue.shade100),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, color: Colors.blue, size: 16),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'info_tambah_simpanan'.tr,
+                    style: const TextStyle(fontSize: 12, color: Colors.blue, height: 1.4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+
+          // --- Nomor Rekening ---
+          _buildLabel('nomor_rekening_upper'.tr),
+          const SizedBox(height: 8),
+          TextField(
+            controller: controller.nomorRekeningController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              hintText: 'masukkan_no_rekening'.tr,
+              hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
+              filled: true,
+              fillColor: Colors.white,
+              prefixIcon: const Icon(Icons.credit_card_outlined, color: Colors.black38),
+              contentPadding: const EdgeInsets.all(16),
+              enabledBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Colors.black12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: themeColor, width: 1.5),
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          _buildLabel('NOMINAL SIMPANAN PERTAMA'),
+          const SizedBox(height: 20),
+
+          // --- Pilih Bank ---
+          _buildLabel('pilih_bank'.tr),
           const SizedBox(height: 8),
-          _buildTextField(controller: controller.nominalController, hintText: 'Rp 0', keyboardType: TextInputType.number),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: controller.namaBankController,
+            builder: (ctx, val, _) {
+              // Pastikan value ada di list, jika tidak reset
+              final selectedVal = bankOptions.contains(val.text) ? val.text : null;
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(
+                    color: selectedVal != null ? themeColor : Colors.black12,
+                    width: selectedVal != null ? 1.5 : 1,
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: selectedVal,
+                    hint: Row(
+                      children: [
+                        const Icon(Icons.account_balance_outlined, color: Colors.black38, size: 20),
+                        const SizedBox(width: 10),
+                        Text('pilih_bank'.tr, style: const TextStyle(color: Colors.black38, fontSize: 14)),
+                      ],
+                    ),
+                    isExpanded: true,
+                    items: bankOptions.map((b) => DropdownMenuItem(
+                      value: b,
+                      child: Text(b, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                    )).toList(),
+                    onChanged: (v) {
+                      if (v != null) controller.namaBankController.text = v;
+                    },
+                  ),
+                ),
+              );
+            },
+          ),
           const SizedBox(height: 40),
-          _buildActionButton('Lanjut', controller.nextStep),
+          _buildActionButton('lanjut'.tr, controller.nextStep),
         ],
       ),
     );
   }
+
 
   // --- STEP 5: AGREEMENT ---
   Widget _buildStep5() {
@@ -670,7 +904,7 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
         children: [
           _buildStepBadge(5, 5),
           const SizedBox(height: 16),
-          Text('Pernyataan', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: themeColor)),
+          Text('pernyataan'.tr, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: themeColor)),
           const SizedBox(height: 32),
           Expanded(
             child: Container(
@@ -678,7 +912,7 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.black12)),
               child: SingleChildScrollView(
                 child: Text(
-                  'Saya menyatakan bahwa data yang saya berikan adalah benar dan saya bersedia mematuhi segala peraturan Koperasi Simpanan Harkat.\n\n' * 5,
+                  'teks_pernyataan'.tr * 5,
                   style: const TextStyle(fontSize: 14, color: Colors.black54, height: 1.6),
                 ),
               ),
@@ -692,13 +926,13 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
                 onChanged: (v) => controller.isAgreed.value = v!,
                 activeColor: themeColor,
               ),
-              const Expanded(
-                child: Text('Saya menyetujui syarat dan ketentuan yang berlaku.', style: TextStyle(fontSize: 13, color: Colors.black54)),
+              Expanded(
+                child: Text('setuju_syarat'.tr, style: const TextStyle(fontSize: 13, color: Colors.black54)),
               ),
             ],
           ),
           const SizedBox(height: 24),
-          _buildActionButton('Ajukan Pendaftaran', controller.submitRegistration),
+          _buildActionButton('ajukan_pendaftaran'.tr, controller.submitRegistration),
         ],
       ),
     );
@@ -711,8 +945,8 @@ class DaftarAnggotaView extends GetView<DaftarAnggotaController> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(color: const Color(0xFFFCE4E4), borderRadius: BorderRadius.circular(20)),
       child: Text(
-        'LANGKAH $current DARI $total',
-        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: themeColor),
+        '${'langkah'.tr} $current ${'dari'.tr} $total',
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: themeColor),
       ),
     );
   }

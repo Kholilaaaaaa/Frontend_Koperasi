@@ -20,13 +20,13 @@ class GrowthView extends StatelessWidget {
       body: SafeArea(
         child: Obx(() {
           if (controller.isLoadingGrowth.value) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CircularProgressIndicator(color: themeColor),
                   SizedBox(height: 16),
-                  Text('Memuat data analytics...', style: TextStyle(color: Colors.black54)),
+                  Text('loading_analytics'.tr, style: const TextStyle(color: Colors.black54)),
                 ],
               ),
             );
@@ -110,18 +110,19 @@ class GrowthView extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('GROWTH ANALYTICS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black38, letterSpacing: 1.5)),
-        Text('Analisis Pertumbuhan', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : themeColor)),
+        Text('growth_analytics'.tr, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black38, letterSpacing: 1.5)),
+        Text('analisis_pertumbuhan'.tr, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : themeColor)),
       ],
     );
   }
 
   Widget _buildFilterSection(BuildContext context, MemberDashboardController controller) {
-    final periods = ['Mingguan', 'Bulanan', 'Tahunan'];
+    final periods = ['mingguan'.tr, 'bulanan'.tr, 'tahunan'.tr];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Obx(() => Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(16),
+        color: isDark ? const Color(0xFF2A2A2A) : Colors.white, borderRadius: BorderRadius.circular(16),
         boxShadow: [BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 10)],
       ),
       child: Row(
@@ -134,7 +135,7 @@ class GrowthView extends StatelessWidget {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(color: isSelected ? themeColor : Colors.transparent, borderRadius: BorderRadius.circular(12)),
-                child: Center(child: Text(p, style: TextStyle(color: isSelected ? Colors.white : Colors.black38, fontWeight: isSelected ? FontWeight.bold : FontWeight.w500, fontSize: 13))),
+                child: Center(child: Text(p, style: TextStyle(color: isSelected ? Colors.white : (isDark ? Colors.white38 : Colors.black38), fontWeight: isSelected ? FontWeight.bold : FontWeight.w500, fontSize: 13))),
               ),
             ),
           );
@@ -185,11 +186,11 @@ class GrowthView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('FINANCIAL HEALTH SCORE', style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
+                Text('financial_health_score'.tr, style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.2)),
                 const SizedBox(height: 4),
                 Text(health.status, style: TextStyle(color: statusColor, fontSize: 20, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 4),
-                const Text('Berdasarkan stabilitas simpanan dan kondisi ekonomi', style: TextStyle(color: Colors.white60, fontSize: 11)),
+                Text('desc_financial_health_score'.tr, style: const TextStyle(color: Colors.white60, fontSize: 11)),
               ],
             ),
           ),
@@ -202,8 +203,8 @@ class GrowthView extends StatelessWidget {
     if (trend.totalBalance <= 0) {
       return _buildSectionCard(
         context,
-        title: 'TREND PERTUMBUHAN SIMPANAN',
-        subtitle: 'Pertumbuhan Saldo Total',
+        title: 'trend_pertumbuhan_simpanan'.tr,
+        subtitle: 'pertumbuhan_saldo_total'.tr,
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 40),
           alignment: Alignment.center,
@@ -211,15 +212,15 @@ class GrowthView extends StatelessWidget {
             children: [
               Icon(Icons.savings_outlined, size: 64, color: Colors.grey.withOpacity(0.3)),
               const SizedBox(height: 16),
-              const Text(
-                'Belum Ada Riwayat Simpanan',
-                style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold),
+              Text(
+                'belum_ada_riwayat_simpanan'.tr,
+                style: const TextStyle(color: Colors.black54, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Grafik pertumbuhan akan muncul setelah Anda mulai menabung.',
+              Text(
+                'grafik_pertumbuhan_akan_muncul'.tr,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.black38, fontSize: 12),
+                style: const TextStyle(color: Colors.black38, fontSize: 12),
               ),
             ],
           ),
@@ -237,14 +238,14 @@ class GrowthView extends StatelessWidget {
 
     return _buildSectionCard(
       context,
-      title: 'TREND PERTUMBUHAN SIMPANAN',
-      subtitle: 'Pertumbuhan Saldo Total',
+      title: 'trend_pertumbuhan_simpanan'.tr,
+      subtitle: 'pertumbuhan_saldo_total'.tr,
       child: Column(
         children: [
           SizedBox(
             height: 200,
             child: spots.isEmpty
-                ? const Center(child: Text('Belum ada data transaksi', style: TextStyle(color: Colors.black38)))
+                ? Center(child: Text('belum_ada_data_transaksi'.tr, style: const TextStyle(color: Colors.black38)))
                 : LineChart(
                     LineChartData(
                       gridData: FlGridData(show: false),
@@ -297,8 +298,8 @@ class GrowthView extends StatelessWidget {
               Expanded(
                 child: Text(
                   isPositive
-                      ? 'Simpanan meningkat ${trend.growthPct}% dibanding bulan lalu.'
-                      : 'Simpanan menurun ${trend.growthPct.abs()}% dibanding bulan lalu.',
+                      ? 'simpanan_meningkat_bulan'.trParams({'pct': trend.growthPct.toString()})
+                      : 'simpanan_menurun_bulan'.trParams({'pct': trend.growthPct.abs().toString()}),
                   style: const TextStyle(color: Colors.black38, fontSize: 12),
                 ),
               ),
@@ -329,14 +330,14 @@ class GrowthView extends StatelessWidget {
 
     return _buildSectionCard(
       context,
-      title: 'KONDISI EKONOMI NASIONAL',
-      subtitle: 'Monitoring Inflasi & BI Rate',
+      title: 'kondisi_ekonomi_nasional'.tr,
+      subtitle: 'monitoring_inflasi_bi'.tr,
       child: Column(
         children: [
           SizedBox(
             height: 180,
             child: !hasData
-                ? const Center(child: Text('Data ekonomi belum tersedia', style: TextStyle(color: Colors.black38)))
+                ? Center(child: Text('data_ekonomi_belum_tersedia'.tr, style: const TextStyle(color: Colors.black38)))
                 : LineChart(
                     LineChartData(
                       gridData: FlGridData(show: false),
@@ -372,7 +373,7 @@ class GrowthView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildLegendDot(Colors.orange, 'Inflasi'),
+              _buildLegendDot(Colors.orange, 'inflasi'.tr),
               const SizedBox(width: 16),
               _buildLegendDot(themeColor, 'BI Rate'),
               const SizedBox(width: 16),
@@ -403,23 +404,24 @@ class GrowthView extends StatelessWidget {
       case 'warning':
         icon = Icons.warning_amber_rounded;
         tagColor = Colors.orange;
-        tagText = 'PERINGATAN';
+        tagText = 'peringatan'.tr;
         break;
       case 'success':
         icon = Icons.check_circle_outline;
         tagColor = const Color(0xFF28A745);
-        tagText = 'POSITIF';
+        tagText = 'positif'.tr;
         break;
       default:
         icon = Icons.info_outline;
         tagColor = Colors.blue;
-        tagText = 'INFORMASI';
+        tagText = 'informasi'.tr;
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF2A2A2A) : Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: themeColor.withAlpha(25)),
         boxShadow: [BoxShadow(color: themeColor.withAlpha(13), blurRadius: 20)],
@@ -434,7 +436,7 @@ class GrowthView extends StatelessWidget {
                 children: [
                   const Icon(Icons.auto_awesome, color: themeColor, size: 20),
                   const SizedBox(width: 8),
-                  const Text('SMART AI INSIGHT', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: themeColor, letterSpacing: 1.2)),
+                  Text('smart_ai_insight'.tr, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: themeColor, letterSpacing: 1.2)),
                 ],
               ),
               Container(
@@ -449,18 +451,18 @@ class GrowthView extends StatelessWidget {
             children: [
               Icon(icon, color: tagColor, size: 18),
               const SizedBox(width: 8),
-              Text(insight.title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.black87)),
+              Text(insight.title, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: isDark ? Colors.white : Colors.black87)),
             ],
           ),
           const SizedBox(height: 8),
-          Text(insight.message, style: const TextStyle(color: Colors.black87, fontSize: 13, height: 1.6, fontWeight: FontWeight.w500)),
+          Text(insight.message, style: TextStyle(color: isDark ? Colors.white70 : Colors.black87, fontSize: 13, height: 1.6, fontWeight: FontWeight.w500)),
           const SizedBox(height: 12),
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(color: themeColor.withAlpha(15), borderRadius: BorderRadius.circular(4)),
-                child: Text('Confidence: ${(insight.confidence * 100).toInt()}%', style: const TextStyle(color: themeColor, fontSize: 9, fontWeight: FontWeight.bold)),
+                child: Text('confidence_param'.trParams({'val': '${(insight.confidence * 100).toInt()}'}), style: const TextStyle(color: themeColor, fontSize: 9, fontWeight: FontWeight.bold)),
               ),
             ],
           ),
@@ -479,8 +481,8 @@ class GrowthView extends StatelessWidget {
 
     return _buildSectionCard(
       context,
-      title: 'PREDICTION ANALYTICS',
-      subtitle: 'Estimasi Pertumbuhan Bulan Depan',
+      title: 'prediction_analytics'.tr,
+      subtitle: 'estimasi_pertumbuhan_bulan_depan'.tr,
       child: Row(
         children: [
           SizedBox(
@@ -500,14 +502,14 @@ class GrowthView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Prediksi Bulan Depan', style: TextStyle(fontSize: 11, color: Colors.black38, fontWeight: FontWeight.bold)),
+                Text('prediksi_bulan_depan'.tr, style: const TextStyle(fontSize: 11, color: Colors.black38, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
                 Text(
                   '${isPositive ? "+" : ""}${prediction.nextMonthGrowthPct}%',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: color),
                 ),
                 Text(
-                  'Probabilitas mencapai target: ${prediction.probability}%',
+                  'probabilitas_target'.trParams({'val': '${prediction.probability}'}),
                   style: const TextStyle(fontSize: 10, color: Colors.black26, fontWeight: FontWeight.w500),
                 ),
                 const SizedBox(height: 4),
@@ -519,7 +521,7 @@ class GrowthView extends StatelessWidget {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      'Trend: ${prediction.trendDirection == 'up' ? 'Naik' : (prediction.trendDirection == 'down' ? 'Turun' : 'Stabil')}',
+                      'trend_param'.trParams({'val': prediction.trendDirection == 'up' ? 'trend_naik'.tr : (prediction.trendDirection == 'down' ? 'trend_turun'.tr : 'trend_stabil'.tr)}),
                       style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
                     ),
                   ],
@@ -534,22 +536,23 @@ class GrowthView extends StatelessWidget {
 
   Widget _buildErrorCard(BuildContext context, String error) {
     final controller = Get.find<MemberDashboardController>();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(24),
+        color: isDark ? const Color(0xFF2A2A2A) : Colors.white, borderRadius: BorderRadius.circular(24),
         boxShadow: [BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 20)],
       ),
       child: Column(
         children: [
           const Icon(Icons.cloud_off_rounded, color: Colors.black26, size: 48),
           const SizedBox(height: 16),
-          Text(error.isNotEmpty ? error : 'Data analytics belum tersedia', style: const TextStyle(color: Colors.black54, fontSize: 14)),
+          Text(error.isNotEmpty ? error : 'data_analytics_belum_tersedia'.tr, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 14)),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => controller.fetchGrowthAnalytics(),
             style: ElevatedButton.styleFrom(backgroundColor: themeColor, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-            child: const Text('Coba Lagi', style: TextStyle(color: Colors.white)),
+            child: Text('coba_lagi'.tr, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -557,18 +560,19 @@ class GrowthView extends StatelessWidget {
   }
 
   Widget _buildSectionCard(BuildContext context, {required String title, required String subtitle, required Widget child}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(24),
+        color: isDark ? const Color(0xFF2A2A2A) : Colors.white, borderRadius: BorderRadius.circular(24),
         boxShadow: [BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 20, offset: const Offset(0, 8))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.black38, letterSpacing: 1.2)),
+          Text(title, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: isDark ? Colors.white38 : Colors.black38, letterSpacing: 1.2)),
           const SizedBox(height: 4),
-          Text(subtitle, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Theme.of(context).brightness == Brightness.dark ? Colors.white : themeColor)),
+          Text(subtitle, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: isDark ? Colors.white : themeColor)),
           const SizedBox(height: 24),
           child,
         ],

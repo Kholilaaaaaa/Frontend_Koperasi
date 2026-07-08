@@ -33,8 +33,6 @@ class LoginController extends GetxController {
 
   @override
   void onClose() {
-    emailController.dispose();
-    passwordController.dispose();
     super.onClose();
   }
 
@@ -61,10 +59,11 @@ class LoginController extends GetxController {
           
       final response = await http.post(
         Uri.parse('$baseUrl/api/login'),
-        body: {
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
           'email': emailController.text,
           'password': passwordController.text,
-        },
+        }),
       ).timeout(const Duration(seconds: 10));
 
       // print('DEBUG: Response Status Code: ${response.statusCode}');
@@ -136,41 +135,69 @@ class LoginController extends GetxController {
   Future<void> loginWithGoogle() async {
     try {
       final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
-      
       final GoogleSignInAuthentication googleAuth = googleUser.authentication;
 
-      // Kirim idToken ke Flask
-      final response = await authorizedPost('/api/auth/google-mobile', {'idToken': googleAuth.idToken});
+      isLoading.value = true;
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        Get.snackbar(
-          'Sukses',
-          'Berhasil login dengan akun Google: ${googleUser.displayName}',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
-        
-        // Store JWT token if present
+      // Panggil endpoint BARU yang hanya menerima user yang sudah terdaftar
+      final response = await authorizedPost(
+        '/api/auth/google-login-mobile',
+        {'idToken': googleAuth.idToken ?? ''},
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['success'] == true) {
+        // Login berhasil
         if (data['token'] != null) {
           await _secureStorage.write(key: 'jwt_token', value: data['token']);
         }
-        
         box.write('isLoggedIn', true);
         box.write('loginType', 'email');
         box.write('userEmail', googleUser.email);
-        
-        if (data['user'] != null && data['user']['id'] != null) {
+        if (data['user'] != null) {
           box.write('userId', data['user']['id']);
+          box.write('userName', data['user']['full_name']);
         }
-        
-        // Cek status member dan navigasi
+        Get.snackbar(
+          'Berhasil',
+          'Selamat datang, ${googleUser.displayName ?? 'Pengguna'}!',
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
         await _checkMemberStatusAndRoute();
+
+      } else if (response.statusCode == 404 && data['needs_signup'] == true) {
+        // Akun belum terdaftar — arahkan ke Signup
+        Get.snackbar(
+          'Belum Terdaftar',
+          'Akun Google ini belum terdaftar. Silakan Signup terlebih dahulu.',
+          backgroundColor: Colors.orange.shade700,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+          mainButton: TextButton(
+            onPressed: () => Get.offNamed(Routes.SIGNUP),
+            child: const Text('Signup', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        );
+
+      } else if (response.statusCode == 403 && data['needs_verification'] == true) {
+        // Sudah daftar tapi belum verifikasi OTP
+        final email = data['email'] ?? googleUser.email;
+        Get.snackbar(
+          'Verifikasi Diperlukan',
+          'Akun Anda belum diverifikasi. Silakan selesaikan verifikasi OTP.',
+          backgroundColor: Colors.blue,
+          colorText: Colors.white,
+          duration: const Duration(seconds: 4),
+        );
+        Get.toNamed(Routes.VERIFICATION, arguments: {'email': email});
+
       } else {
         Get.snackbar(
-          'Error Backend',
-          'Gagal autentikasi di server: ${response.statusCode}',
-          backgroundColor: Colors.orange,
+          'Login Gagal',
+          data['error'] ?? 'Terjadi kesalahan saat login dengan Google',
+          backgroundColor: Colors.red,
           colorText: Colors.white,
         );
       }
@@ -181,6 +208,8 @@ class LoginController extends GetxController {
         backgroundColor: Colors.red,
         colorText: Colors.white,
       );
+    } finally {
+      isLoading.value = false;
     }
   }
 

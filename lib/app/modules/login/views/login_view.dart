@@ -18,18 +18,18 @@ class LoginView extends GetView<LoginController> {
             children: [
               _buildTopBar(),
               const SizedBox(height: 24),
-              const Text(
-                'Masuk ke Akun',
-                style: TextStyle(
+              Text(
+                'masuk_ke_akun'.tr,
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF6B0000),
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Kelola simpanan warisan Anda secara modern.',
-                style: TextStyle(
+              Text(
+                'kelola_simpanan_warisan'.tr,
+                style: const TextStyle(
                   fontSize: 14,
                   color: Colors.black54,
                 ),
@@ -37,9 +37,9 @@ class LoginView extends GetView<LoginController> {
               const SizedBox(height: 32),
               
               // Email / Phone Field
-              const Text(
-                'TELEPON ATAU EMAIL',
-                style: TextStyle(
+              Text(
+                'telepon_atau_email'.tr,
+                style: const TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF6B0000),
@@ -50,7 +50,7 @@ class LoginView extends GetView<LoginController> {
               TextField(
                 controller: controller.emailController,
                 decoration: InputDecoration(
-                  hintText: '0812... atau nama@email.com',
+                  hintText: 'hint_telepon_email'.tr,
                   hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
                   prefixIcon: const Icon(Icons.person_outline, color: Colors.black54),
                   filled: true,
@@ -68,9 +68,9 @@ class LoginView extends GetView<LoginController> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'PASSWORD',
-                    style: TextStyle(
+                  Text(
+                    'password'.tr,
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF6B0000),
@@ -84,9 +84,9 @@ class LoginView extends GetView<LoginController> {
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text(
-                      'Lupa Password?',
-                      style: TextStyle(
+                    child: Text(
+                      'lupa_password'.tr,
+                      style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF6B0000),
@@ -100,7 +100,7 @@ class LoginView extends GetView<LoginController> {
                     controller: controller.passwordController,
                     obscureText: !controller.isPasswordVisible.value,
                     decoration: InputDecoration(
-                      hintText: '********',
+                      hintText: 'hint_password'.tr,
                       hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
                       prefixIcon: const Icon(Icons.lock_outline, color: Colors.black54),
                       suffixIcon: IconButton(
@@ -147,13 +147,13 @@ class LoginView extends GetView<LoginController> {
                       )
                     : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
+                        children: [
                           Text(
-                            'Masuk',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            'masuk'.tr,
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
-                          SizedBox(width: 8),
-                          Icon(Icons.login, size: 20),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.login, size: 20),
                         ],
                       ),
               )),
@@ -162,13 +162,13 @@ class LoginView extends GetView<LoginController> {
               
               // Divider
               Row(
-                children: const [
-                  Expanded(child: Divider(color: Colors.black12)),
+                children: [
+                  const Expanded(child: Divider(color: Colors.black12)),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      'METODE LAIN',
-                      style: TextStyle(
+                      'metode_lain'.tr,
+                      style: const TextStyle(
                         fontSize: 10,
                         color: Colors.black38,
                         letterSpacing: 1.0,
@@ -182,23 +182,33 @@ class LoginView extends GetView<LoginController> {
               
               const SizedBox(height: 24),
               
-              // Social Button
+              // Social Button — Google
               SizedBox(
                 width: double.infinity,
-                child: OutlinedButton.icon(
+                child: OutlinedButton(
                   onPressed: controller.loginWithGoogle,
-                  icon: const Icon(Icons.g_mobiledata, color: Colors.blue),
-                  label: const Text(
-                    'Google',
-                    style: TextStyle(color: Colors.black87),
-                  ),
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.5),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide.none,
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: const BorderSide(color: Color(0xFFDDDDDD)),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const _GoogleLogo(size: 22),
+                      const SizedBox(width: 12),
+                      Text(
+                        'masuk_google'.tr,
+                        style: const TextStyle(
+                          color: Colors.black87,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -209,15 +219,15 @@ class LoginView extends GetView<LoginController> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    'Belum punya akun? ',
-                    style: TextStyle(fontSize: 12, color: Colors.black54),
+                  Text(
+                    'belum_punya_akun'.tr,
+                    style: const TextStyle(fontSize: 12, color: Colors.black54),
                   ),
                   GestureDetector(
                     onTap: () => Get.offNamed(Routes.SIGNUP),
-                    child: const Text(
-                      'Daftar Sekarang',
-                      style: TextStyle(
+                    child: Text(
+                      'daftar_sekarang'.tr,
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF6B0000),
@@ -231,7 +241,7 @@ class LoginView extends GetView<LoginController> {
               
               const Center(
                 child: Text(
-                  '© 2024 KOPERASI SIMPANAN HARKAT •\nKEPERCAYAAN MELALUI GENERASI',
+                  '© 2024 KOPERASI SIMPANKU •\nKEPERCAYAAN MELALUI GENERASI',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 8,
@@ -260,30 +270,17 @@ class LoginView extends GetView<LoginController> {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
               ),
-              const SizedBox(width: 16),
-              Container(
-                width: 35,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  border: Border.all(color: const Color(0xFF6B0000).withValues(alpha: 0.1)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(Icons.account_balance, color: Color(0xFF6B0000), size: 20),
-                ),
+              const SizedBox(width: 8),
+              Image.asset(
+                'assets/images/logo_koperasi.png',
+                width: 36,
+                height: 36,
+                fit: BoxFit.contain,
               ),
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  'KOPERASI HARKAT',
+                  'KOPERASI SIMPANKU',
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                   style: TextStyle(
@@ -301,4 +298,58 @@ class LoginView extends GetView<LoginController> {
       ],
     );
   }
+}
+
+// ── Google Logo Widget (4 warna asli) ─────────────────────────────────────
+class _GoogleLogo extends StatelessWidget {
+  final double size;
+  const _GoogleLogo({this.size = 24});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _GoogleLogoPainter()),
+    );
+  }
+}
+
+class _GoogleLogoPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final strokeW = size.width * 0.22;
+    final rect = Rect.fromCircle(center: center, radius: radius - strokeW / 2);
+
+    void arc(Color color, double start, double sweep) {
+      canvas.drawArc(rect, start, sweep, false,
+          Paint()..color = color..strokeWidth = strokeW..style = PaintingStyle.stroke..strokeCap = StrokeCap.butt);
+    }
+
+    const pi = 3.14159265;
+    // Merah
+    arc(const Color(0xFFEA4335), -pi * 0.22, pi * 0.72);
+    // Kuning
+    arc(const Color(0xFFFBBC05), pi * 0.50, pi * 0.5);
+    // Hijau
+    arc(const Color(0xFF34A853), pi * 1.00, pi * 0.5);
+    // Biru
+    arc(const Color(0xFF4285F4), pi * 1.50, pi * 0.78);
+
+    // Garis horizontal (bagian khas Google)
+    final paint = Paint()
+      ..color = const Color(0xFF4285F4)
+      ..strokeWidth = strokeW
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(center.dx, center.dy),
+      Offset(size.width - strokeW * 0.3, center.dy),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

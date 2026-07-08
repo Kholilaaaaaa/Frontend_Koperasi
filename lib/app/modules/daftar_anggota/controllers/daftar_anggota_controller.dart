@@ -29,20 +29,26 @@ class DaftarAnggotaController extends GetxController {
   var pasFotoImage = Rx<File?>(null);
   var signatureImage = Rx<File?>(null);
 
-  // Step 3: OCR Data
+  // Step 3: OCR Data (dari KTP)
   final nameController = TextEditingController();
   final nikController = TextEditingController();
   final dobController = TextEditingController();
   final genderController = TextEditingController();
   final religionController = TextEditingController();
   final addressController = TextEditingController();
+  // Step 3: Data Kepegawaian (diisi manual)
+  final nipController = TextEditingController();
+  final jabatanController = TextEditingController();
   var isDuplicate = false.obs;
   var duplicateReason = ''.obs;
+  var ocrConfidence = 0.0.obs;
   var _ocrAlreadyProcessed = false.obs;
 
-  // Step 4: Savings
-  var selectedSavingsType = 'Simpanan Sukarela'.obs;
-  final nominalController = TextEditingController();
+  // Step 4: Savings (Pendaftaran hanya Simpanan Wajib)
+  var selectedSavingsType = 'Simpanan Wajib'.obs;
+  final nominalController = TextEditingController(text: '100000');
+  final nomorRekeningController = TextEditingController();
+  final namaBankController = TextEditingController();
 
   // Step 5: Agreement
   var isAgreed = false.obs;
@@ -69,10 +75,17 @@ class DaftarAnggotaController extends GetxController {
     religionController.dispose();
     addressController.dispose();
     nominalController.dispose();
+    nomorRekeningController.dispose();
+    namaBankController.dispose();
     super.onClose();
   }
 
   Future<void> startKtpScannerFlow() async {
+    // Clear image cache and old image to prevent OOM when launching MLKit
+    ktpImage.value = null;
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+    
     final result = await Get.to(() => const ScannerInstructionsView(documentType: 'ktp'));
     
     if (result == null) return;
@@ -88,14 +101,18 @@ class DaftarAnggotaController extends GetxController {
 
       // Langsung isi field dengan data OCR yang sudah ada dari scan
       if (ocrData != null && ocrData.isNotEmpty) {
-        nameController.text = ocrData['nama'] ?? '';
-        nikController.text = ocrData['nik'] ?? '';
-        dobController.text = ocrData['ttl'] ?? '';
-        genderController.text = ocrData['jenis_kelamin'] ?? 'Laki-laki';
-        religionController.text = ocrData['agama'] ?? '';
-        addressController.text = ocrData['alamat'] ?? '';
-        isDuplicate.value = ocrData['is_duplicate'] ?? false;
-        duplicateReason.value = ocrData['duplicate_reason'] ?? '';
+        nameController.text    = ocrData['nama']?.toString() ?? '';
+        nikController.text     = ocrData['nik']?.toString() ?? '';
+        dobController.text     = ocrData['ttl']?.toString() ?? '';
+        genderController.text  = ocrData['jenis_kelamin']?.toString() ?? 'Laki-laki';
+        religionController.text = ocrData['agama']?.toString() ?? '';
+        addressController.text = ocrData['alamat']?.toString() ?? '';
+        isDuplicate.value = ocrData['is_duplicate'] == true;
+        duplicateReason.value = ocrData['duplicate_reason']?.toString() ?? '';
+        ocrConfidence.value = (ocrData['ocr_confidence'] as num?)?.toDouble() ?? 0.0;
+
+        debugPrint('[CONTROLLER] OCR dari scanner: nama=${nameController.text}, nik=${nikController.text}, ttl=${dobController.text}, confidence=${ocrConfidence.value}');
+
         // Tandai bahwa OCR sudah diproses agar tidak dipanggil 2x
         _ocrAlreadyProcessed.value = true;
       }
@@ -209,8 +226,8 @@ class DaftarAnggotaController extends GetxController {
         return;
       }
       if (kartuAnggotaImage.value == null) {
-        Get.snackbar('Dokumen Belum Lengkap', 'Harap upload Kartu Anggota terlebih dahulu', 
-            backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar('Dokumen Belum Lengkap', 'Harap upload ID Card / Kartu Karyawan terlebih dahulu', 
+        backgroundColor: Colors.red, colorText: Colors.white);
         return;
       }
       if (pasFotoImage.value == null) {
@@ -225,12 +242,46 @@ class DaftarAnggotaController extends GetxController {
       }
       processOCR();
     } else if (currentStep.value == 3) {
-      // Data bisa diisi manual jika OCR tidak sempurna, tidak perlu validasi NIK kosong
+      if (nameController.text.isEmpty ||
+          nikController.text.isEmpty ||
+          dobController.text.isEmpty ||
+          genderController.text.isEmpty ||
+          religionController.text.isEmpty ||
+          addressController.text.isEmpty ||
+          nipController.text.isEmpty ||
+          jabatanController.text.isEmpty) {
+        Get.snackbar(
+          'Data Belum Lengkap',
+          'Harap pastikan semua data OCR serta kolom NIP dan Jabatan telah terisi.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+        );
+        return;
+      }
       currentStep.value = 4;
     } else if (currentStep.value == 4) {
-      if (nominalController.text.isEmpty) {
-        Get.snackbar('Error', 'Nominal simpanan harus diisi', 
-            backgroundColor: Colors.red, colorText: Colors.white);
+      if (nomorRekeningController.text.isEmpty) {
+        Get.snackbar(
+          'Data Belum Lengkap',
+          'Nomor rekening harus diisi.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+        );
+        return;
+      }
+      if (namaBankController.text.isEmpty) {
+        Get.snackbar(
+          'Data Belum Lengkap',
+          'Nama bank harus dipilih.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+          margin: const EdgeInsets.all(16),
+        );
         return;
       }
       currentStep.value = 5;
@@ -308,7 +359,7 @@ class DaftarAnggotaController extends GetxController {
         request.headers['Authorization'] = 'Bearer $token';
       }
 
-      var streamedResponse = await request.send().timeout(const Duration(seconds: 60)); // sama dengan camera_scanner_view.dart
+      var streamedResponse = await request.send().timeout(const Duration(seconds: 120)); // sama dengan camera_scanner_view.dart
       var response = await http.Response.fromStream(streamedResponse);
 
       Get.back(); // Close loading dialog
@@ -317,16 +368,19 @@ class DaftarAnggotaController extends GetxController {
         var data = jsonDecode(response.body);
         
         // Isi form dengan data dari Backend
-        nameController.text = data['nama'] ?? "";
-        nikController.text = data['nik'] ?? "";
-        dobController.text = data['ttl'] ?? "";
-        genderController.text = data['jenis_kelamin'] ?? "Laki-laki";
-        religionController.text = data['agama'] ?? "";
-        addressController.text = data['alamat'] ?? "";
-        
+        nameController.text    = data['nama']?.toString() ?? '';
+        nikController.text     = data['nik']?.toString() ?? '';
+        dobController.text     = data['ttl']?.toString() ?? '';
+        genderController.text  = data['jenis_kelamin']?.toString() ?? 'Laki-laki';
+        religionController.text = data['agama']?.toString() ?? '';
+        addressController.text = data['alamat']?.toString() ?? '';
+
+        debugPrint('[CONTROLLER] OCR dari processOCR: nama=${nameController.text}, nik=${nikController.text}, ttl=${dobController.text}');
+
         // Validasi dan Duplikat dari backend
-        isDuplicate.value = data['is_duplicate'] ?? false;
-        duplicateReason.value = data['duplicate_reason'] ?? "";
+        isDuplicate.value = data['is_duplicate'] == true;
+        duplicateReason.value = data['duplicate_reason']?.toString() ?? '';
+        ocrConfidence.value = (data['ocr_confidence'] as num?)?.toDouble() ?? 0.0;
 
         // Hitung field yang berhasil terisi
         int filledFields = 0;
@@ -432,10 +486,21 @@ class DaftarAnggotaController extends GetxController {
       request.fields['jenis_kelamin'] = genderController.text;
       request.fields['agama'] = religionController.text;
       request.fields['alamat'] = addressController.text;
+      // Data Kepegawaian
+      request.fields['nip'] = nipController.text;
+      request.fields['jabatan'] = jabatanController.text;
       
-      // Data Simpanan
-      request.fields['tipe_simpanan'] = selectedSavingsType.value;
-      request.fields['nominal_simpanan'] = nominalController.text;
+      // Data OCR
+      request.fields['ocr_confidence'] = ocrConfidence.value.toString();
+      request.fields['is_duplicate'] = isDuplicate.value.toString();
+      request.fields['duplicate_reason'] = duplicateReason.value;
+      
+      // Data Simpanan - saat pendaftaran selalu Simpanan Wajib Rp 100.000
+      request.fields['tipe_simpanan'] = 'Simpanan Wajib';
+      request.fields['nominal_simpanan'] = '100000';
+      // Data Rekening Bank
+      request.fields['nomor_rekening'] = nomorRekeningController.text;
+      request.fields['nama_bank'] = namaBankController.text;
 
       // File Dokumen
       if (ktpImage.value != null) {

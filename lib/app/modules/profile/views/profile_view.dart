@@ -21,7 +21,7 @@ class ProfileView extends GetView<ProfileController> {
           onPressed: () => Get.back(),
         ),
         title: Text(
-          'Edit Profil',
+          'edit_profil'.tr,
           style: TextStyle(
             color: Theme.of(context).brightness == Brightness.dark ? Colors.white : themeColor, 
             fontWeight: FontWeight.w900, 
@@ -59,10 +59,14 @@ class ProfileView extends GetView<ProfileController> {
               radius: 60,
               backgroundColor: themeColor.withAlpha(25),
               child: Obx(() {
-                  if (controller.avatarPath.value.isNotEmpty) {
+                  final path = controller.avatarPath.value;
+                  if (path.isNotEmpty) {
+                    final isNetwork = path.startsWith('http://') || path.startsWith('https://');
                     return CircleAvatar(
                       radius: 60,
-                      backgroundImage: FileImage(File(controller.avatarPath.value)),
+                      backgroundImage: isNetwork 
+                        ? NetworkImage(path) as ImageProvider
+                        : FileImage(File(path)),
                       backgroundColor: Colors.transparent,
                     );
                   }
@@ -102,28 +106,28 @@ class ProfileView extends GetView<ProfileController> {
       children: [
         _buildInputField(
           context: context,
-          label: 'NAMA LENGKAP',
+          label: 'nama_lengkap'.tr,
           icon: Icons.person_outline,
           controller: controller.nameController,
         ),
         const SizedBox(height: 20),
         _buildInputField(
           context: context,
-          label: 'EMAIL',
+          label: 'email'.tr,
           icon: Icons.mail_outline,
           controller: controller.emailController,
         ),
         const SizedBox(height: 20),
         _buildInputField(
           context: context,
-          label: 'NOMOR TELEPON',
+          label: 'nomor_telepon'.tr,
           icon: Icons.phone_android_outlined,
           controller: controller.phoneController,
         ),
         const SizedBox(height: 20),
         _buildInputField(
           context: context,
-          label: 'ALAMAT',
+          label: 'alamat'.tr,
           icon: Icons.location_on_outlined,
           controller: controller.addressController,
           maxLines: 3,
@@ -131,7 +135,7 @@ class ProfileView extends GetView<ProfileController> {
         const SizedBox(height: 20),
         _buildInputField(
           context: context,
-          label: 'ID ANGGOTA',
+          label: 'id_anggota'.tr,
           icon: Icons.badge_outlined,
           controller: controller.memberIdController,
           enabled: false,
@@ -195,9 +199,9 @@ class ProfileView extends GetView<ProfileController> {
         elevation: 8,
         shadowColor: themeColor.withAlpha(102),
       ),
-      child: const Text(
-        'Simpan Perubahan',
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+      child: Text(
+        'simpan_perubahan'.tr,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
       ),
     );
   }

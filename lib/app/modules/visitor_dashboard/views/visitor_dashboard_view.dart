@@ -8,6 +8,9 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
 
   @override
   Widget build(BuildContext context) {
+    // Memaksa GetX untuk menginisialisasi controller
+    final _ = controller;
+    
     final themeColor = Color(0xFF6B0D0D);
     final bgColor = Color(0xFFFFF9F6);
 
@@ -32,8 +35,11 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
         label: Row(
           children: [
             Text(
-              'Daftar Menjadi Anggota',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              'daftar_menjadi_anggota'.tr,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             SizedBox(width: 8),
             Icon(Icons.arrow_forward, color: Colors.white, size: 18),
@@ -52,28 +58,22 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
         children: [
           Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  border: Border.all(color: const Color(0xFF6B0D0D).withOpacity(0.1)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Center(
-                  child: Icon(Icons.account_balance, color: Color(0xFF6B0D0D), size: 20),
-                ),
+              IconButton(
+                icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF6B0D0D), size: 20),
+                onPressed: () => Get.offAllNamed(Routes.LOGIN),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 8),
+              Image.asset(
+                'assets/images/logo_koperasi.png',
+                width: 36,
+                height: 36,
+                fit: BoxFit.contain,
               ),
               const SizedBox(width: 12),
               const Text(
-                'KOPERASI SIMPANAN HARKAT',
+                'KOPERASI SIMPANKU',
                 style: TextStyle(
                   color: Color(0xFF6B0D0D),
                   fontWeight: FontWeight.w900,
@@ -96,7 +96,7 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Wujudkan Masa\nDepan Finansial\nyang Lebih Baik',
+            'visitor_hero_title'.tr,
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w900,
@@ -106,14 +106,9 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
           ),
           SizedBox(height: 16),
           Text(
-            'Bergabunglah dengan ekosistem koperasi modern yang mengutamakan transparansi dan kesejahteraan bersama.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-              height: 1.5,
-            ),
+            'visitor_hero_desc'.tr,
+            style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
           ),
-          SizedBox(height: 24),
           SizedBox(height: 32),
           ClipRRect(
             borderRadius: BorderRadius.circular(24),
@@ -124,6 +119,18 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
                   width: double.infinity,
                   height: 200,
                   fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: double.infinity,
+                    height: 200,
+                    color: Colors.orange[100],
+                    child: Center(
+                      child: Icon(
+                        Icons.account_balance,
+                        size: 80,
+                        color: themeColor.withOpacity(0.3),
+                      ),
+                    ),
+                  ),
                 ),
                 Position8(
                   bottom: 16,
@@ -133,12 +140,31 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('STATUS', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                        Text('Aktif', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                        Icon(
+                          Icons.auto_graph,
+                          color: Colors.green[600],
+                          size: 16,
+                        ),
+                        SizedBox(width: 6),
+                        Text(
+                          'update_ekonomi_harian'.tr,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            color: Colors.black87,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -158,7 +184,7 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'KEUNGGULAN KAMI',
+            'fitur_unggulan'.tr,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -168,7 +194,7 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
           ),
           SizedBox(height: 8),
           Text(
-            'Solusi Simpanan\nMasa Depan Anda',
+            'solusi_finansial'.tr,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -177,23 +203,23 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
           ),
           SizedBox(height: 24),
           _buildFeatureCard(
-            Icons.account_balance_wallet_outlined,
-            'Beragam Jenis Simpanan',
-            'Tersedia Simpanan Pokok, Wajib, dan Sukarela yang dirancang untuk mendukung pertumbuhan aset finansial Anda dengan aman.',
+            Icons.newspaper_rounded,
+            'berita_ekonomi_terkini'.tr,
+            'desc_berita_ekonomi'.tr,
             Colors.orange[50]!,
           ),
           SizedBox(height: 16),
           _buildFeatureCard(
-            Icons.account_balance_outlined,
-            'Penarikan Fleksibel',
-            'Ajukan penarikan dana simpanan sukarela Anda kapan saja langsung melalui aplikasi, tanpa proses yang rumit.',
+            Icons.document_scanner_rounded,
+            'verifikasi_cerdas'.tr,
+            'desc_verifikasi_cerdas'.tr,
             Colors.white,
           ),
           SizedBox(height: 16),
           _buildFeatureCard(
-            Icons.trending_up,
-            'Bagi Hasil (SHU)',
-            'Nikmati Sisa Hasil Usaha tahunan yang kompetitif sebagai apresiasi atas partisipasi aktif Anda dalam koperasi.',
+            Icons.account_balance_wallet_rounded,
+            'manajemen_simpanan'.tr,
+            'desc_manajemen_simpanan'.tr,
             themeColor.withAlpha((0.9 * 255).toInt()),
             isDark: true,
           ),
@@ -202,7 +228,13 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
     );
   }
 
-  Widget _buildFeatureCard(IconData icon, String title, String desc, Color bgColor, {bool isDark = false}) {
+  Widget _buildFeatureCard(
+    IconData icon,
+    String title,
+    String desc,
+    Color bgColor, {
+    bool isDark = false,
+  }) {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -225,7 +257,11 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
               color: isDark ? Colors.white24 : Colors.orange[100],
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: isDark ? Colors.white : Colors.orange[800], size: 24),
+            child: Icon(
+              icon,
+              color: isDark ? Colors.white : Colors.orange[800],
+              size: 24,
+            ),
           ),
           SizedBox(height: 16),
           Text(
@@ -261,75 +297,28 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Lihat Potensi\nPertumbuhan Anda',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: themeColor,
-            ),
+          Row(
+            children: [
+              Icon(Icons.rocket_launch_rounded, color: themeColor, size: 28),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'siap_memulai'.tr,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: themeColor,
+                  ),
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 16),
           Text(
-            'Gunakan simulasi kami untuk melihat bagaimana simpanan Anda berkontribusi pada pertumbuhan kolektif.',
-            style: TextStyle(color: Colors.black54),
+            'desc_siap_memulai'.tr,
+            style: const TextStyle(color: Colors.black87, fontSize: 14, height: 1.5),
           ),
           SizedBox(height: 24),
-          Text(
-            'ESTIMASI SIMPANAN BULANAN',
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey),
-          ),
-          SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Obx(() => Text(
-                'Rp ${controller.savingsAmount.value.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => "${m[1]}.")}',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              )),
-              Icon(Icons.edit, color: themeColor, size: 18),
-            ],
-          ),
-          Divider(height: 32),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Estimasi SHU per Tahun', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                    Text('12.5%', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange[800])),
-                  ],
-                ),
-              ),
-              VerticalDivider(),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Total Proyeksi', style: TextStyle(fontSize: 10, color: Colors.grey)),
-                    Obx(() => Text(
-                      'Rp ${(controller.savingsAmount.value * 1.125).toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => "${m[1]}.")}',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green[700]),
-                    )),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              child: Text('Mulai Simulasi Lengkap', style: TextStyle(color: Colors.white)),
-            ),
-          ),
         ],
       ),
     );
@@ -340,7 +329,20 @@ class VisitorDashboardView extends GetView<VisitorDashboardController> {
 class Position8 extends StatelessWidget {
   final Widget child;
   final double? top, bottom, left, right;
-  const Position8({super.key, required this.child, this.top, this.bottom, this.left, this.right});
+  const Position8({
+    super.key,
+    required this.child,
+    this.top,
+    this.bottom,
+    this.left,
+    this.right,
+  });
   @override
-  Widget build(BuildContext context) => Positioned(top: top, bottom: bottom, left: left, right: right, child: child);
+  Widget build(BuildContext context) => Positioned(
+    top: top,
+    bottom: bottom,
+    left: left,
+    right: right,
+    child: child,
+  );
 }
